@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   // Get accepted articles (or all pending if no accepted yet — Phase 4 will populate)
+  // All Articles = everything, no status filter
   const allArticles = await db
     .select({
       id: articles.id,
@@ -23,12 +24,8 @@ export default async function Dashboard() {
       author: articles.author,
     })
     .from(articles)
-    .where(
-      // Show accepted articles, or pending if no accepted exist yet
-      inArray(articles.status, ["accepted", "pending"])
-    )
     .orderBy(desc(articles.publishedAt), desc(articles.scrapedAt))
-    .limit(200);
+    .limit(500);
 
   // Get source names for display
   const sourceIds = [...new Set(allArticles.map((a) => a.sourceId))];
