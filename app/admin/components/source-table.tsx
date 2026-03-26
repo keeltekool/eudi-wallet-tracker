@@ -9,6 +9,7 @@ type Source = {
   url: string;
   type: "rss" | "css";
   category: string | null;
+  config: Record<string, unknown> | null;
   active: boolean;
   lastScrapedAt: Date | null;
   lastArticleCount: number | null;
@@ -25,26 +26,34 @@ function timeAgo(date: Date | null): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
+function hasSelectors(source: Source): boolean {
+  if (source.type !== "css") return true;
+  const config = source.config as Record<string, unknown> | null;
+  return !!(config && config.articleSelector);
+}
+
+function getStatus(source: Source): "healthy" | "broken" | "needs-setup" | "paused" | "new" {
+  if (!source.active) return "paused";
+  if (source.type === "css" && !hasSelectors(source)) return "needs-setup";
+  if (!source.lastScrapedAt) return "new";
+  if (source.lastArticleCount === 0) return "broken";
+  return "healthy";
+}
+
 export function SourceTable({ sources }: { sources: Source[] }) {
   const router = useRouter();
 
-  const healthy = sources.filter(
-    (s) => s.active && s.lastScrapedAt && s.lastArticleCount !== 0
-  ).length;
-  const broken = sources.filter(
-    (s) => s.active && s.lastScrapedAt && s.lastArticleCount === 0
-  ).length;
-  const paused = sources.filter((s) => !s.active).length;
-  const newSources = sources.filter(
-    (s) => s.active && !s.lastScrapedAt
-  ).length;
+  const healthy = sources.filter((s) => getStatus(s) === "healthy").length;
+  const broken = sources.filter((s) => getStatus(s) === "broken").length;
+  const needsSetup = sources.filter((s) => getStatus(s) === "needs-setup").length;
+  const paused = sources.filter((s) => getStatus(s) === "paused").length;
   const rssCount = sources.filter((s) => s.type === "rss").length;
   const cssCount = sources.filter((s) => s.type === "css").length;
 
   return (
     <div>
       {/* Overview stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
           <div className="text-2xl font-bold">{sources.length}</div>
           <div className="text-xs text-gray-500 mt-0.5">Total sources</div>
@@ -52,6 +61,10 @@ export function SourceTable({ sources }: { sources: Source[] }) {
         <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
           <div className="text-2xl font-bold text-emerald-600">{healthy}</div>
           <div className="text-xs text-gray-500 mt-0.5">Healthy</div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
+          <div className="text-2xl font-bold text-purple-600">{needsSetup}</div>
+          <div className="text-xs text-gray-500 mt-0.5">Needs setup</div>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
           <div className="text-2xl font-bold text-amber-600">{broken}</div>
@@ -77,18 +90,22 @@ export function SourceTable({ sources }: { sources: Source[] }) {
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Healthy ({healthy})
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          Broken ({broken})
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-          Paused ({paused})
-        </div>
-        {newSources > 0 && (
+        {needsSetup > 0 && (
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            New ({newSources})
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+            Needs setup ({needsSetup})
+          </div>
+        )}
+        {broken > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Broken ({broken})
+          </div>
+        )}
+        {paused > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+            Paused ({paused})
           </div>
         )}
       </div>
@@ -146,6 +163,8 @@ export function SourceTable({ sources }: { sources: Source[] }) {
                     active={source.active}
                     lastArticleCount={source.lastArticleCount}
                     lastScrapedAt={source.lastScrapedAt}
+                    type={source.type}
+                    hasSelectors={hasSelectors(source)}
                   />
                 </td>
                 <td className="px-4 py-3 text-gray-500">

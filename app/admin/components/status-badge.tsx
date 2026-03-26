@@ -2,17 +2,30 @@ type Props = {
   active: boolean;
   lastArticleCount: number | null;
   lastScrapedAt: Date | null;
+  type: "rss" | "css";
+  hasSelectors: boolean;
 };
 
 export function StatusBadge({
   active,
   lastArticleCount,
   lastScrapedAt,
+  type,
+  hasSelectors,
 }: Props) {
   if (!active) {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
         Paused
+      </span>
+    );
+  }
+
+  // CSS source with no selectors configured = needs setup, not broken
+  if (type === "css" && !hasSelectors) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
+        Needs setup
       </span>
     );
   }

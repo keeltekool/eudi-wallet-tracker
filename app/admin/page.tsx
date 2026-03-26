@@ -2,6 +2,7 @@ import { db } from "@/src/db/client";
 import { sources, scrapeRuns } from "@/src/db/schema";
 import { desc } from "drizzle-orm";
 import { SourceTable } from "./components/source-table";
+import { SetupCssButton } from "./components/setup-css-button";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,13 @@ export default async function AdminPage() {
   ]);
 
   const lastRun = recentRuns[0];
+
+  // Count CSS sources needing setup
+  const needsSetupCount = allSources.filter((s) => {
+    if (s.type !== "css" || !s.active) return false;
+    const config = s.config as Record<string, unknown> | null;
+    return !config || !config.articleSelector;
+  }).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,6 +70,9 @@ export default async function AdminPage() {
             </Link>
           </div>
         </div>
+
+        {/* CSS setup prompt */}
+        <SetupCssButton count={needsSetupCount} />
 
         <SourceTable sources={allSources} />
       </div>
