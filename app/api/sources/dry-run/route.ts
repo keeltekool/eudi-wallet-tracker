@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   const { type, url, config } = await request.json();
 
   try {
-    let articles;
+    let articles: any[];
 
     if (type === "rss") {
       const RssParser = (await import("rss-parser")).default;

@@ -9,7 +9,7 @@ type Source = {
   url: string;
   type: "rss" | "css";
   category: string | null;
-  config: Record<string, unknown>;
+  config: Record<string, unknown> | null;
   active: boolean;
   lastScrapedAt: Date | null;
   lastArticleCount: number | null;
