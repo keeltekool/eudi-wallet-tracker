@@ -1,0 +1,30 @@
+name: Scrape Sources
+
+on:
+  schedule:
+    # Twice-weekly: Wednesday and Saturday at 06:00 UTC
+    - cron: "0 6 * * 3,6"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --workspaces --include-workspace-root
+
+      - name: Run scraper
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: cd worker && npx tsx src/run-scrape.ts
