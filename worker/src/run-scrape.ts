@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-config({ path: ".env.local" });
+config({ path: "../.env.local" });
 
 import { createDb } from "../../src/db/index";
 import { runScrape } from "./orchestrator";

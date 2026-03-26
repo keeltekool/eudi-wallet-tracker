@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-config({ path: ".env.local" });
+config({ path: "../.env.local" });
 
 import cron from "node-cron";
 import { createDb } from "../../src/db/index";
