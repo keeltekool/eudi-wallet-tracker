@@ -47,12 +47,20 @@ export default async function AdminPage() {
               )}
             </p>
           </div>
-          <Link
-            href="/admin/sources/new"
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Add source
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/admin/sources/import"
+              className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Bulk import
+            </Link>
+            <Link
+              href="/admin/sources/new"
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Add source
+            </Link>
+          </div>
         </div>
 
         <SourceTable sources={allSources} />
