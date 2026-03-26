@@ -7,7 +7,7 @@ import { Header } from "../components/header";
 export const dynamic = "force-dynamic";
 
 export default async function CuratedPage() {
-  // Only show accepted articles (AI-reviewed and approved)
+  // Curated = accepted only, with full enrichment (summaries, scores, categories)
   const acceptedArticles = await db
     .select({
       id: articles.id,
@@ -27,7 +27,6 @@ export default async function CuratedPage() {
     .orderBy(desc(articles.publishedAt), desc(articles.scrapedAt))
     .limit(200);
 
-  // Get source names
   const sourceIds = [...new Set(acceptedArticles.map((a) => a.sourceId))];
   const allSources =
     sourceIds.length > 0
@@ -36,19 +35,12 @@ export default async function CuratedPage() {
           .from(sources)
           .where(inArray(sources.id, sourceIds))
       : [];
-
   const sourceMap = new Map(allSources.map((s) => [s.id, s.name]));
 
   const articlesWithSource = acceptedArticles.map((a) => ({
     ...a,
     sourceName: sourceMap.get(a.sourceId) || "Unknown",
   }));
-
-  const allCategories = [
-    ...new Set(
-      acceptedArticles.flatMap((a) => (a.categories as string[]) || [])
-    ),
-  ].sort();
 
   return (
     <div className="min-h-screen bg-[#F5F3EE]">
@@ -69,7 +61,7 @@ export default async function CuratedPage() {
             </p>
           </div>
         ) : (
-          <Feed articles={articlesWithSource} categories={allCategories} />
+          <Feed articles={articlesWithSource} variant="curated" />
         )}
       </main>
     </div>

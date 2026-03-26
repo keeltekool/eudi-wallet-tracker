@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 
-type Article = {
+export type Article = {
   id: number;
   title: string;
   url: string;
@@ -33,14 +33,77 @@ function getFaviconUrl(articleUrl: string): string {
   }
 }
 
-function getPrimaryCategory(categories: string[]): string | null {
-  return categories.length > 0 ? categories[0] : null;
+function formatDate(date: Date | null): string {
+  if (!date) return "No date";
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-export function ArticleCard({ article }: { article: Article }) {
+/**
+ * Raw card — used on All Articles and Filtered tabs.
+ * Shows only: title, favicon, source, author, date.
+ * NO scores, NO summaries, NO categories, NO colored borders.
+ */
+export function RawArticleCard({ article }: { article: Article }) {
+  const faviconUrl = getFaviconUrl(article.url);
+  const date = article.publishedAt || article.scrapedAt;
+
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block bg-white border border-[#E3E0D9] rounded-xl overflow-hidden hover:translate-y-[-1px] hover:shadow-[0_4px_20px_rgba(26,26,46,0.06)] transition-all duration-200"
+    >
+      <div className="px-5 py-4">
+        <h3
+          className="text-base font-bold text-[#1A1A2E] leading-snug line-clamp-2"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {article.title}
+        </h3>
+        <div
+          className="mt-3 flex items-center gap-1.5 text-[11px] text-[#94A3B8]"
+          style={{ fontFamily: "var(--font-label)" }}
+        >
+          {faviconUrl && (
+            <img
+              src={faviconUrl}
+              alt=""
+              width={14}
+              height={14}
+              className="rounded-sm"
+              loading="lazy"
+            />
+          )}
+          <span className="font-medium text-[#4A5568]">
+            {article.sourceName}
+          </span>
+          {article.author && (
+            <>
+              <span>·</span>
+              <span>{article.author}</span>
+            </>
+          )}
+          <span>·</span>
+          <span>{formatDate(date)}</span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+/**
+ * Enriched card — used ONLY on the Curated tab.
+ * Shows everything: categories, relevance score, summary, colored border.
+ */
+export function CuratedArticleCard({ article }: { article: Article }) {
   const categories = (article.categories || []) as string[];
   const date = article.publishedAt || article.scrapedAt;
-  const primaryCat = getPrimaryCategory(categories);
+  const primaryCat = categories.length > 0 ? categories[0] : null;
   const borderColor = primaryCat
     ? CATEGORY_COLORS[primaryCat]?.border || "#E3E0D9"
     : "#E3E0D9";
@@ -55,8 +118,8 @@ export function ArticleCard({ article }: { article: Article }) {
       style={{ borderLeftWidth: "3px", borderLeftColor: borderColor }}
     >
       <div className="px-5 py-4">
-        {/* Categories + score */}
-        {(categories.length > 0 || (article.relevanceScore && article.relevanceScore >= 8)) && (
+        {(categories.length > 0 ||
+          (article.relevanceScore && article.relevanceScore >= 8)) && (
           <div className="flex items-center gap-2 mb-2">
             {categories.map((cat) => {
               const colors = CATEGORY_COLORS[cat] || {
@@ -89,7 +152,6 @@ export function ArticleCard({ article }: { article: Article }) {
           </div>
         )}
 
-        {/* Title */}
         <h3
           className="text-base font-bold text-[#1A1A2E] leading-snug line-clamp-2"
           style={{ fontFamily: "var(--font-display)" }}
@@ -97,7 +159,6 @@ export function ArticleCard({ article }: { article: Article }) {
           {article.title}
         </h3>
 
-        {/* Summary */}
         {article.summary && (
           <p
             className="mt-1.5 text-sm text-[#4A5568] leading-relaxed line-clamp-2"
@@ -107,7 +168,6 @@ export function ArticleCard({ article }: { article: Article }) {
           </p>
         )}
 
-        {/* Footer: favicon + source · author · date */}
         <div
           className="mt-3 flex items-center gap-1.5 text-[11px] text-[#94A3B8]"
           style={{ fontFamily: "var(--font-label)" }}
@@ -132,15 +192,7 @@ export function ArticleCard({ article }: { article: Article }) {
             </>
           )}
           <span>·</span>
-          <span>
-            {date
-              ? new Date(date).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "No date"}
-          </span>
+          <span>{formatDate(date)}</span>
         </div>
       </div>
     </a>

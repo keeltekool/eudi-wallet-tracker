@@ -7,7 +7,9 @@ import { Header } from "../components/header";
 export const dynamic = "force-dynamic";
 
 export default async function FilteredPage() {
-  // Show articles that passed the relevance filter (relevant + accepted)
+  // Filtered = passed the relevance gate (relevant, accepted, rejected)
+  // NOT pending, NOT irrelevant
+  // Displayed as raw cards — no enrichment shown
   const filteredArticles = await db
     .select({
       id: articles.id,
@@ -25,9 +27,8 @@ export default async function FilteredPage() {
     .from(articles)
     .where(inArray(articles.status, ["relevant", "accepted", "rejected"]))
     .orderBy(desc(articles.publishedAt), desc(articles.scrapedAt))
-    .limit(200);
+    .limit(500);
 
-  // Get source names
   const sourceIds = [...new Set(filteredArticles.map((a) => a.sourceId))];
   const allSources =
     sourceIds.length > 0
@@ -36,19 +37,12 @@ export default async function FilteredPage() {
           .from(sources)
           .where(inArray(sources.id, sourceIds))
       : [];
-
   const sourceMap = new Map(allSources.map((s) => [s.id, s.name]));
 
   const articlesWithSource = filteredArticles.map((a) => ({
     ...a,
     sourceName: sourceMap.get(a.sourceId) || "Unknown",
   }));
-
-  const allCategories = [
-    ...new Set(
-      filteredArticles.flatMap((a) => (a.categories as string[]) || [])
-    ),
-  ].sort();
 
   return (
     <div className="min-h-screen bg-[#F5F3EE]">
@@ -69,7 +63,7 @@ export default async function FilteredPage() {
             </p>
           </div>
         ) : (
-          <Feed articles={articlesWithSource} categories={allCategories} />
+          <Feed articles={articlesWithSource} variant="raw" />
         )}
       </main>
     </div>
