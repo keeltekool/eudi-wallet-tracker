@@ -23,7 +23,7 @@ export default async function FilteredPage() {
       author: articles.author,
     })
     .from(articles)
-    .where(inArray(articles.status, ["relevant", "accepted"]))
+    .where(inArray(articles.status, ["relevant", "accepted", "rejected"]))
     .orderBy(desc(articles.publishedAt), desc(articles.scrapedAt))
     .limit(200);
 
