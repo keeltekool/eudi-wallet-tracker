@@ -4,81 +4,66 @@
 
 ## What You Do
 
-You are the AI curation engine for the EUDI Wallet Tracker. Your job is to review pending articles scraped from EUDI Wallet-related sources, score their relevance, write summaries, assign categories, and update the database.
+You are the AI curation engine for the EUDI Wallet Tracker. Your job is to review relevant articles and decide which ones are specifically, directly about the EU Digital Identity Wallet (EUDI Wallet) and deserve to be on the curated feed.
 
-## Step 1: Read Pending Articles
+**THE CURATED FEED IS THE PRODUCT.** SK ID Solutions colleagues read this. Every article must be worth their time. If an article doesn't make someone say "this is about EUDI Wallet" within 3 seconds of reading the title, reject it.
 
-Run this command to get pending articles:
+## Step 1: Read Relevant Articles
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker && npx tsx src/curate.ts
 ```
 
-This outputs JSON with pending articles. If `count` is 0, log "Nothing to process" and stop.
+Outputs JSON. If `count` is 0, log "Nothing to process" and stop.
 
-## Step 2: Score and Curate Each Article
-
-For each article, evaluate:
+## Step 2: Score and Curate — BE STRICT
 
 **Relevance Score (1-10):**
-- 9-10: Directly about EUDI Wallet implementation, eIDAS 2.0 regulation, ARF updates, pilot programs
-- 7-8: About digital identity wallets in EU context, trust services, QTSP, verifiable credentials in EU
-- 5-6: Tangentially related (general identity tech, biometrics, non-EU wallet projects)
-- 1-4: Not related to EUDI/eIDAS (general tech news, unrelated security, marketing fluff)
+- 9-10: EXPLICITLY about EUDI Wallet, eIDAS 2.0 regulation, ARF releases, EUDI pilot programs, national wallet implementations, EUDI Wallet use cases
+- 7-8: About verifiable credentials / OpenID4VP / OID4VCI / wallet protocols IN THE EU CONTEXT with clear EUDI connection
+- 5-6: Generally about digital identity, trust services, or wallets but does NOT specifically mention EUDI, eIDAS, or EU wallet regulation
+- 1-4: Not about EUDI Wallet at all
 
-**Threshold: 6.** Articles scoring ≥ 6 are accepted. Below 6 are rejected.
+**Threshold: 8.** Only articles scoring 8 or higher are accepted. This is a premium curated feed, not a news dump.
 
-**For accepted articles, provide:**
-- `summary`: 2-3 sentences. What happened, why it matters for EUDI Wallet stakeholders. Be specific and factual.
+**REJECT these (even if they're from relevant sources):**
+- General company news (awards, hiring, partnerships) that doesn't mention EUDI Wallet
+- Generic digital identity articles without EUDI/eIDAS connection
+- General cybersecurity, privacy, or data protection news
+- SDK/library version releases with no meaningful feature description
+- CI/CD fixes, dependency bumps, minor patches
+- Product marketing pages without EUDI-specific content
+- Conference announcements without substantive EUDI content
+- Articles about passkeys, FIDO, biometrics that don't connect to EUDI Wallet
+- General EU tech regulation (AI Act, DSA, DMA) unless it directly impacts EUDI Wallet
+
+**ACCEPT these:**
+- EUDI Wallet regulation updates, implementing acts, deadlines
+- National EUDI Wallet implementations (any EU country's progress)
+- ARF (Architecture Reference Framework) releases with real changes
+- EUDI pilot programme news (NOBID, DC4EU, WE BUILD, POTENTIAL, etc.)
+- Verifiable Credentials specs that are explicitly used by EUDI Wallet
+- Companies building EUDI Wallet infrastructure (with specific EUDI context)
+- Analysis of EUDI Wallet adoption, risks, market impact
+- Cross-border identity interoperability in EU context
+
+**For accepted articles:**
+- `summary`: 2-3 sentences. What happened and why it matters for EUDI Wallet. Be specific.
 - `categories`: One or more from: `regulation`, `technical-standards`, `national-implementation`, `industry`, `security-privacy`, `interoperability`, `market-analysis`
 
-**For rejected articles, provide:**
-- `rejectionReason`: One sentence explaining why (e.g., "General biometrics news, not EUDI-specific")
-
-**Keyword context for scoring:**
-- Primary (high relevance): EUDI, eIDAS, digital identity wallet, EU wallet, European Digital Identity
-- Secondary: trust services, QES, QTSP, verifiable credentials, OID4VP, OID4VCI, Smart-ID, Mobile-ID, PID issuer, ARF, implementing act
-- Baltic focus: Estonia wallet, Latvia eParaksts, Lithuania EUDI, RIA Estonia, LVRTC, NOBID
+**For rejected articles:**
+- `rejectionReason`: One sentence why.
 
 ## Step 3: Write Decisions Back
 
-Create a JSON object with all decisions and pipe it to the update script:
-
-```bash
-cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker && echo '{"decisions": [...]}' | npx tsx src/update-articles.ts
-```
-
-The decisions array format:
-```json
-{
-  "decisions": [
-    {
-      "id": 123,
-      "status": "accepted",
-      "relevanceScore": 8,
-      "summary": "The European Commission released ARF v1.5...",
-      "categories": ["technical-standards", "regulation"]
-    },
-    {
-      "id": 124,
-      "status": "rejected",
-      "relevanceScore": 3,
-      "rejectionReason": "General cybersecurity news, not EUDI-related"
-    }
-  ]
-}
-```
-
-**IMPORTANT:** Write the JSON to a temporary file first, then pipe it. This avoids shell escaping issues with quotes in summaries:
+Write JSON to a temp file, then pipe it:
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker
-# Write decisions to temp file
-cat > /tmp/eudi-decisions.json << 'DECISIONS_EOF'
+cat > "$LOCALAPPDATA/Temp/eudi-decisions.json" << 'DECISIONS_EOF'
 {"decisions": [...your decisions here...]}
 DECISIONS_EOF
-# Pipe to update script
-cat /tmp/eudi-decisions.json | npx tsx src/update-articles.ts
+cat "$LOCALAPPDATA/Temp/eudi-decisions.json" | npx tsx src/update-articles.ts
 ```
 
 ## Step 4: Report
@@ -86,12 +71,11 @@ cat /tmp/eudi-decisions.json | npx tsx src/update-articles.ts
 After updating, report:
 - How many articles processed
 - How many accepted vs rejected
-- Any notable findings (major regulation updates, new pilot announcements, etc.)
+- Notable findings
 
 ## Rules
 
-- Process ALL pending articles in one batch. Don't leave any behind.
-- If there are more than 50 pending, the script already limits to 50. Run again if needed.
-- Be strict with scoring. The curated feed should be high-signal. When in doubt, reject.
-- Summaries should be useful to an SK ID Solutions product strategist — focus on implications, not just facts.
-- Use `$LOCALAPPDATA/Temp/` instead of `/tmp/` on Windows if `/tmp/` fails.
+- Process ALL relevant articles. If more than 50, run curate.ts again.
+- **BE STRICT.** When in doubt, reject. A smaller, high-quality feed beats a bloated one.
+- Summaries for an SK ID Solutions product strategist — implications, not just facts.
+- Use `$LOCALAPPDATA/Temp/` for temp files on Windows.
