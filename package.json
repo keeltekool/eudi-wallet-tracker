@@ -1,12 +1,22 @@
 {
   "name": "eudi-wallet-tracker",
   "private": true,
-  "workspaces": ["worker"],
+  "workspaces": [
+    "worker"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "vitest": "^4.1.1"
   }
 }
