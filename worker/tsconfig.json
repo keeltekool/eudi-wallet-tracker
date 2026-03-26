@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/worker",
+    "rootDir": ".."
+  },
+  "include": ["src/**/*", "../src/db/**/*", "../src/lib/**/*"],
+  "exclude": ["node_modules"]
+}

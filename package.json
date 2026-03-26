@@ -1,0 +1,12 @@
+{
+  "name": "eudi-wallet-tracker",
+  "private": true,
+  "workspaces": ["worker"],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  }
+}
