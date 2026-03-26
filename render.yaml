@@ -1,0 +1,13 @@
+services:
+  - type: worker
+    name: eudi-wallet-worker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    repo: https://github.com/keeltekool/eudi-wallet-tracker
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
