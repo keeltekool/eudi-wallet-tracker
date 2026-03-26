@@ -97,7 +97,7 @@ export function ArticleCard({ article }: { article: Article }) {
         </p>
       )}
 
-      {/* Footer: source · time */}
+      {/* Footer: source · date */}
       <div
         className="mt-3 flex items-center gap-1.5 text-[11px] text-[#94A3B8]"
         style={{ fontFamily: "var(--font-label)" }}
@@ -112,7 +112,15 @@ export function ArticleCard({ article }: { article: Article }) {
           </>
         )}
         <span>·</span>
-        <span>{timeAgo(date)}</span>
+        <span>
+          {date
+            ? new Date(date).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : "No date"}
+        </span>
       </div>
     </a>
   );
