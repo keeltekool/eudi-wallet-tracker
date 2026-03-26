@@ -18,6 +18,8 @@ export const sourceTypeEnum = pgEnum("source_type", ["rss", "css"]);
 
 export const articleStatusEnum = pgEnum("article_status", [
   "pending",
+  "relevant",
+  "irrelevant",
   "accepted",
   "rejected",
 ]);

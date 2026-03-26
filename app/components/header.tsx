@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const TABS = [
+  { href: "/", label: "All articles" },
+  { href: "/filtered", label: "Filtered" },
+  { href: "/curated", label: "Curated" },
+];
+
 export function Header() {
   const pathname = usePathname();
-  const isRaw = pathname === "/" || pathname === "";
-  const isCurated = pathname === "/curated";
 
   return (
     <header className="sticky top-0 z-30 bg-[#F5F3EE]/80 backdrop-blur-xl border-b border-[#E3E0D9]">
@@ -21,30 +25,28 @@ export function Header() {
             </span>
           </Link>
 
-          {/* View tabs */}
           <nav className="flex items-center gap-1">
-            <Link
-              href="/"
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
-                isRaw
-                  ? "bg-[#1A1A2E] text-white"
-                  : "text-[#4A5568] hover:text-[#1A1A2E] hover:bg-[#E3E0D9]/50"
-              }`}
-              style={{ fontFamily: "var(--font-label)" }}
-            >
-              All articles
-            </Link>
-            <Link
-              href="/curated"
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
-                isCurated
-                  ? "bg-[#1A1A2E] text-white"
-                  : "text-[#4A5568] hover:text-[#1A1A2E] hover:bg-[#E3E0D9]/50"
-              }`}
-              style={{ fontFamily: "var(--font-label)" }}
-            >
-              Curated
-            </Link>
+            {TABS.map((tab) => {
+              const isActive =
+                tab.href === "/"
+                  ? pathname === "/" || pathname === ""
+                  : pathname === tab.href;
+
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    isActive
+                      ? "bg-[#1A1A2E] text-white"
+                      : "text-[#4A5568] hover:text-[#1A1A2E] hover:bg-[#E3E0D9]/50"
+                  }`}
+                  style={{ fontFamily: "var(--font-label)" }}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
