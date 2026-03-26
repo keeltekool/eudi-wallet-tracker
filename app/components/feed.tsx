@@ -12,7 +12,7 @@ type Article = {
   summary: string | null;
   relevanceScore: number | null;
   categories: string[] | null;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "relevant" | "irrelevant" | "accepted" | "rejected";
   sourceName: string;
   author: string | null;
 };
