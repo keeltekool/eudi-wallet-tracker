@@ -10,6 +10,7 @@
 | **Vercel** | Next.js dashboard + admin hosting | — |
 | **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) | `DATABASE_URL` (GH secret) |
 | **Anthropic API** | One-off CSS selector analysis (~$0.01/source) | `ANTHROPIC_API_KEY` |
+| **Loop Control Center** | Filter + curation loop management | LCC API key in LCC `.env.local` |
 | **Google Fonts** | Fraunces, DM Sans, Epilogue, JetBrains Mono | — |
 
 ## Brand
@@ -22,23 +23,37 @@
 
 ## Auth
 
-- Dashboard: public, no auth
+- Dashboard: public, no auth (3 tabs: All Articles, Filtered, Curated)
 - Admin (`/admin`): cookie-based password gate, env var `ADMIN_PASSWORD`
+
+## Pipeline
+
+```
+Scraper (GitHub Actions, Wed+Sat 06:00 UTC)
+  → pending articles in Neon
+Filter Loop (Claude Code, 06:33 UTC) — LCC ID: 929cf3c2
+  → marks relevant / irrelevant
+Curation Loop (Claude Code, 07:33 UTC) — LCC ID: 28e1088d
+  → scores, summarizes, categorizes → accepted / rejected
+```
 
 ## Dev
 
 ```bash
-npm run dev          # Next.js on port 3000
-cd worker && npm run scrape   # Manual scrape
-cd worker && npm run seed     # Re-seed sources
-npm run db:push      # Push schema to Neon
-npm run db:studio    # Drizzle Studio
+npm run dev                        # Next.js on port 3000
+cd worker && npm run scrape        # Manual scrape
+cd worker && npm run seed          # Re-seed sources
+cd worker && npx tsx src/filter.ts # Read pending for filter
+cd worker && npx tsx src/curate.ts # Read relevant for curation
+npm run db:push                    # Push schema to Neon
+npm run db:studio                  # Drizzle Studio
 ```
 
 ## Deploy
 
 - **Dashboard:** auto-deploys on push to `master` via Vercel
-- **Scraper:** GitHub Actions workflow `scrape.yml` — runs on cron or manual `workflow_dispatch`
+- **Scraper:** GitHub Actions workflow `scrape.yml` — cron or manual `workflow_dispatch`
+- **AI Loops:** `/sync-loops` in a Claude Code session restores both loops
 
 ## Gotchas
 
@@ -50,11 +65,13 @@ npm run db:studio    # Drizzle Studio
 | Render removed free background worker tier | Switched to GitHub Actions (free for public repos) |
 | Next.js 16 middleware deprecation warning | Still works, but `proxy` is the new convention |
 | `npm ci` fails with workspaces in GitHub Actions | Use `npm install` instead |
+| AI loops only run when Claude Code is open | Run `/sync-loops` in a dedicated session, keep it open |
 
 ## Post-Deploy Smoke Tests
 
-1. Load dashboard — articles render, search works
-2. Click "Curated" tab — shows empty state or curated articles
-3. Navigate to `/admin` — redirects to login
-4. Login with password — source list loads with health badges
-5. Check `/admin/runs` — scrape history visible
+1. Load `/` — All Articles tab shows raw feed
+2. Click "Filtered" tab — shows EUDI-relevant articles only
+3. Click "Curated" tab — shows AI-scored articles with summaries
+4. Navigate to `/admin` — redirects to login
+5. Login with password — source list with health badges
+6. Check `/admin/runs` — scrape history visible
