@@ -122,29 +122,39 @@ export function SourceTable({ sources }: { sources: Source[] }) {
     else setSelected(new Set(displayed.map((s) => s.id)));
   }
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   async function bulkAction(action: "delete" | "pause" | "resume" | "reanalyze") {
     const ids = [...selected];
     if (ids.length === 0) return;
 
-    if (action === "delete" && !confirm(`Delete ${ids.length} source${ids.length === 1 ? "" : "s"}? Articles will be preserved.`)) return;
+    if (action === "delete" && !confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
 
     setBulkLoading(true);
     setBulkMessage("");
+    setConfirmDelete(false);
 
-    const res = await fetch("/api/sources/bulk-action", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids, action }),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/sources/bulk-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, action }),
+      });
+      const data = await res.json();
 
-    if (action === "reanalyze" && data.results) {
-      const success = data.results.filter((r: any) => r.status === "success").length;
-      const noArticles = data.results.filter((r: any) => r.status === "no-articles").length;
-      const failed = data.results.filter((r: any) => !["success", "no-articles", "skipped-rss"].includes(r.status)).length;
-      setBulkMessage(`Re-analyzed: ${success} fixed, ${noArticles} still 0 articles, ${failed} failed`);
-    } else {
-      setBulkMessage(`${action === "delete" ? "Deleted" : action === "pause" ? "Paused" : "Resumed"} ${ids.length} source${ids.length === 1 ? "" : "s"}`);
+      if (action === "reanalyze" && data.results) {
+        const success = data.results.filter((r: any) => r.status === "success").length;
+        const noArticles = data.results.filter((r: any) => r.status === "no-articles").length;
+        const failed = data.results.filter((r: any) => !["success", "no-articles", "skipped-rss"].includes(r.status)).length;
+        setBulkMessage(`Re-analyzed: ${success} fixed, ${noArticles} still 0 articles, ${failed} failed`);
+      } else {
+        setBulkMessage(`${action === "delete" ? "Deleted" : action === "pause" ? "Paused" : "Resumed"} ${ids.length} source${ids.length === 1 ? "" : "s"}`);
+      }
+    } catch (err) {
+      setBulkMessage(`Error: ${err instanceof Error ? err.message : "unknown"}`);
     }
 
     setSelected(new Set());
@@ -231,24 +241,31 @@ export function SourceTable({ sources }: { sources: Source[] }) {
         <div className="flex items-center gap-3 mb-4 p-3 bg-gray-900 rounded-xl text-white">
           <span className="text-xs font-medium">{selected.size} selected</span>
           <div className="flex gap-2 ml-auto">
-            <button onClick={() => bulkAction("reanalyze")} disabled={bulkLoading}
-              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
-              {bulkLoading ? "..." : "Re-analyze AI"}
+            <button type="button" onClick={() => { bulkAction("reanalyze"); }} disabled={bulkLoading}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+              {bulkLoading ? "Processing..." : "Re-analyze AI"}
             </button>
-            <button onClick={() => bulkAction("pause")} disabled={bulkLoading}
-              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+            <button type="button" onClick={() => { bulkAction("pause"); }} disabled={bulkLoading}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
               Pause
             </button>
-            <button onClick={() => bulkAction("resume")} disabled={bulkLoading}
-              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+            <button type="button" onClick={() => { bulkAction("resume"); }} disabled={bulkLoading}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
               Resume
             </button>
-            <button onClick={() => bulkAction("delete")} disabled={bulkLoading}
-              className="px-3 py-1 bg-red-500/80 hover:bg-red-500 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
-              Delete
-            </button>
-            <button onClick={() => setSelected(new Set())}
-              className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
+            {confirmDelete ? (
+              <button type="button" onClick={() => { bulkAction("delete"); }} disabled={bulkLoading}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-xs font-bold transition-colors animate-pulse">
+                Confirm delete {selected.size}?
+              </button>
+            ) : (
+              <button type="button" onClick={() => { bulkAction("delete"); }} disabled={bulkLoading}
+                className="px-3 py-1.5 bg-red-500/80 hover:bg-red-500 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+                Delete
+              </button>
+            )}
+            <button type="button" onClick={() => { setSelected(new Set()); setConfirmDelete(false); }}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
               Cancel
             </button>
           </div>
