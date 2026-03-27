@@ -54,9 +54,7 @@ export const articles = pgTable(
   "articles",
   {
     id: serial("id").primaryKey(),
-    sourceId: integer("source_id")
-      .notNull()
-      .references(() => sources.id),
+    sourceId: integer("source_id").notNull(),
     url: text("url").notNull(),
     urlHash: varchar("url_hash", { length: 64 }).notNull(),
     contentHash: varchar("content_hash", { length: 64 }),
