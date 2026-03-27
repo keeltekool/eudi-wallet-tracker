@@ -149,8 +149,39 @@ export function SourceForm({ source }: { source: Source }) {
     setAnalyzing(false);
   }
 
+  const isBroken = source.active && source.lastScrapedAt && source.lastArticleCount === 0;
+  const needsSetup = source.type === "css" && !source.config?.articleSelector;
+
   return (
     <div className="space-y-6">
+      {/* Broken / Needs setup banner */}
+      {(isBroken || needsSetup) && form.type === "css" && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-amber-900">
+                {needsSetup
+                  ? "This source needs CSS selectors to work"
+                  : "This source found 0 articles last scrape"}
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                Click to re-run AI analysis — it will generate new selectors and test them
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                await handleAnalyze();
+                await handleDryRun();
+              }}
+              disabled={analyzing || testing}
+              className="px-4 py-2 bg-amber-700 text-white text-sm font-medium rounded-lg hover:bg-amber-800 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {analyzing ? "Analyzing..." : testing ? "Testing..." : "Fix with AI"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
