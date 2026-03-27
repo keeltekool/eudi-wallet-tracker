@@ -143,8 +143,24 @@ export function SourceTable({ sources }: { sources: Source[] }) {
                 className="border-b border-gray-100 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">
-                    {source.name}
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-gray-900">
+                      {source.name}
+                    </div>
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-gray-700 transition-colors"
+                      title="Open source page"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
                   </div>
                   <div className="text-xs text-gray-400 truncate max-w-[300px]">
                     {source.url}
