@@ -70,8 +70,62 @@ export function AddSourceForm({
     setStatusMessage("Checking for RSS feed...");
 
     try {
+      // Step 0: YouTube URL detection
+      // If it's a YouTube channel URL, extract channel ID and construct RSS feed
+      const ytMatch = url.match(
+        /youtube\.com\/(?:@[\w-]+|channel\/(UC[\w-]+))/
+      );
+      if (ytMatch) {
+        setStatusMessage("Detected YouTube channel — extracting feed...");
+
+        // Fetch the YouTube page to extract channel_id from HTML
+        const ytRes = await fetch("/api/sources/dry-run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "css",
+            url: url.replace(/\/videos\/?$/, ""),
+            config: {
+              articleSelector: "nonexistent",
+            },
+          }),
+        });
+        // We don't care about the CSS result — we need to fetch the page ourselves
+        // Use the analyze endpoint to get the page HTML and extract channel_id
+        const pageRes = await fetch("/api/sources/youtube-feed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url.replace(/\/videos\/?$/, "") }),
+        });
+        const ytData = await pageRes.json();
+
+        if (ytData.feedUrl) {
+          const ytRssRes = await fetch("/api/sources/dry-run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "rss",
+              url: url,
+              config: { feedUrl: ytData.feedUrl },
+            }),
+          });
+          const ytRssData = await ytRssRes.json();
+
+          if (!ytRssData.error && ytRssData.articles?.length > 0) {
+            setType("rss");
+            setConfig({ feedUrl: ytData.feedUrl });
+            setPreview(ytRssData.articles);
+            setStatusMessage("");
+            if (!name) setName(ytData.channelName || "YouTube Channel");
+            setStep("preview");
+            return;
+          }
+        }
+
+        setStatusMessage("Could not extract YouTube feed. Trying other methods...");
+      }
+
       // Step 1: Try RSS auto-detection
-      // Common RSS feed paths to try
       const feedPaths = ["/feed", "/feed/", "/rss", "/atom.xml", "/feed.xml"];
       const baseUrl = new URL(url);
 
