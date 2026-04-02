@@ -51,13 +51,17 @@ export function Header() {
         </div>
 
         <nav className="flex items-center gap-4">
-          <a
-            href="#"
-            className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] hover:text-[#1A1A2E] transition-colors"
+          <Link
+            href="/strategy"
+            className={`text-xs font-semibold uppercase tracking-wider transition-colors ${
+              pathname === "/strategy"
+                ? "text-[#1A1A2E]"
+                : "text-[#4A5568] hover:text-[#1A1A2E]"
+            }`}
             style={{ fontFamily: "var(--font-label)" }}
           >
-            Living Doc
-          </a>
+            Strategy Brief
+          </Link>
         </nav>
       </div>
     </header>

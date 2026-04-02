@@ -90,6 +90,18 @@ export const scrapeRuns = pgTable("scrape_runs", {
   errors: jsonb("errors").$type<ScrapeError[]>().default([]),
 });
 
+// ── Living Doc ────────────────────────────────────
+
+export const livingDoc = pgTable("living_doc", {
+  id: serial("id").primaryKey(),
+  section: text("section").notNull(), // "bible" or "update"
+  content: text("content").notNull(),
+  runDate: timestamp("run_date", { withTimezone: true }),
+  articlesProcessed: integer("articles_processed"),
+  sectionsTouched: text("sections_touched").array().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 // ── Types ──────────────────────────────────────────
 
 export type SourceConfig = {
