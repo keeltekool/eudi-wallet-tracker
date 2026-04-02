@@ -94,7 +94,7 @@ sql\`SELECT run_date FROM living_doc WHERE section = 'update' ORDER BY run_date 
 If output is `SKIP` → stop here, you're done for this run.
 If output is `RUN` or `NEVER` → continue with Step 4.
 
-### 4a: Read the Bible from Neon
+### 4a: Read the Strategy Brief from Neon
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker
@@ -106,7 +106,7 @@ sql\`SELECT content FROM living_doc WHERE section = 'bible' LIMIT 1\`.then(r => 
 "
 ```
 
-Read the full output. This is the current state of the Living Strategy Document — the "Bible." You need to understand every section, every fact, every open question before analyzing articles.
+Read the full output. This is the current state of the Living Strategy Document. You need to understand every section, every fact, every open question before analyzing articles.
 
 ### 4b: Read new accepted articles
 
@@ -119,11 +119,11 @@ Use the date from the cadence check. If `NEVER`, omit the date to get all articl
 
 ### 4c: Intelligence Analysis
 
-For each article, test against the Bible. Four criteria, in order:
+For each article, test against the Strategy Brief. Four criteria, in order:
 
-1. **NEW_FACT** — Something the Bible doesn't mention at all (new deadline, new country decision, new spec version, new company entering the space, new pilot result)
-2. **UPDATED_FACT** — An existing Bible fact has changed (deadline moved, country changed approach, spec superseded)
-3. **RESOLVED_QUESTION** — An open question listed in the Bible now has an answer
+1. **NEW_FACT** — Something the Strategy Brief doesn't mention at all (new deadline, new country decision, new spec version, new company entering the space, new pilot result)
+2. **UPDATED_FACT** — An existing Strategy Brief fact has changed (deadline moved, country changed approach, spec superseded)
+3. **RESOLVED_QUESTION** — An open question listed in the Strategy Brief now has an answer
 4. **DEEPENED_INSIGHT** — Known topic, but meaningfully new detail (concrete numbers, implementation specifics)
 
 **If NO to all 4 → skip the article.** Confirmation of known information is NOT worth reporting.
@@ -134,21 +134,21 @@ For each article, test against the Bible. Four criteria, in order:
 
 ```
 ## Update: YYYY-MM-DD
-Articles reviewed: N | New intelligence: N | Bible changes: N
+Articles reviewed: N | New intelligence: N | Strategy Brief changes: N
 
-### [Bible Section Name]
+### [Strategy Brief Section Name]
 - [CLASSIFICATION] Description of new intelligence
-  → Context: how this relates to what the Bible currently says
+  → Context: how this relates to what the Strategy Brief currently says
   → Source: [Article title](url)
 
 ### No new intelligence:
 [List sections with nothing new]
 ```
 
-### 4e: Apply Bible changes (if any)
+### 4e: Apply Strategy Brief changes (if any)
 
 If any items classified as `NEW_FACT`, `UPDATED_FACT`, or `RESOLVED_QUESTION`:
-- Read the current Bible text
+- Read the current Strategy Brief text
 - Apply surgical changes: add new facts, replace updated facts (note old value), remove resolved open questions and add answers to section body
 - Never rewrite sections with no new information
 
@@ -159,7 +159,7 @@ Append the update log entry:
 gws docs +write --document 1IjPRgPSB72Igoe0dr7Jh95N6nhg3J_NIA0dGee1JjTc --text '<the update log entry>'
 ```
 
-If Bible text was changed, the full Bible update goes to Google Doc via `gws docs documents batchUpdate`.
+If Strategy Brief text was changed, the full updated text goes to Google Doc via `gws docs documents batchUpdate`.
 
 ### 4g: Write to Neon
 
@@ -167,7 +167,7 @@ If Bible text was changed, the full Bible update goes to Google Doc via `gws doc
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker
 cat > "$LOCALAPPDATA/Temp/eudi-living-doc.json" << 'LIVINGDOC_EOF'
 {
-  "bible": "<full updated Bible markdown — ONLY include if Bible was changed, otherwise omit this field>",
+  "bible": "<full updated Strategy Brief markdown — ONLY include if the Strategy Brief was changed, otherwise omit this field>",
   "update": {
     "content": "<the update log markdown>",
     "runDate": "<ISO date>",
@@ -183,7 +183,7 @@ cat "$LOCALAPPDATA/Temp/eudi-living-doc.json" | npx tsx src/update-living-doc.ts
 
 Add to your run report:
 - Living Doc: Updated / Skipped (N days since last)
-- If updated: sections touched, Bible changes count, new intel items count
+- If updated: sections touched, Strategy Brief changes count, new intel items count
 
 ## Rules
 
@@ -192,5 +192,6 @@ Add to your run report:
 - Summaries for an SK ID Solutions product strategist — implications, not just facts.
 - Use `$LOCALAPPDATA/Temp/` for temp files on Windows.
 - **Living Doc:** Step 4 only runs if 12+ days since last update. Don't force it.
-- **Living Doc:** Bible changes are surgical. Never rewrite a section that has no new information.
+- **Living Doc:** Strategy Brief changes are surgical. Never rewrite a section that has no new information.
+- **Living Doc:** In update log text, always refer to the main document as "the Strategy Brief" — never use internal shorthand like "Bible".
 - **Living Doc:** An empty update ("No actionable new intelligence") is a valid outcome. Don't manufacture insights.
