@@ -234,11 +234,24 @@ function MarkdownBlock({ content }: { content: string }) {
 export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
   const sections = parseBibleSections(bible);
   const [openSections, setOpenSections] = useState<Set<number>>(new Set());
+  const [openUpdates, setOpenUpdates] = useState<Set<number>>(
+    new Set(updates.map((_, i) => i))
+  );
 
   const allOpen = openSections.size === sections.length;
+  const allUpdatesOpen = openUpdates.size === updates.length;
 
   const toggleSection = (index: number) => {
     setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const toggleUpdate = (index: number) => {
+    setOpenUpdates((prev) => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
       else next.add(index);
@@ -251,6 +264,14 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
       setOpenSections(new Set());
     } else {
       setOpenSections(new Set(sections.map((_, i) => i)));
+    }
+  };
+
+  const toggleAllUpdates = () => {
+    if (allUpdatesOpen) {
+      setOpenUpdates(new Set());
+    } else {
+      setOpenUpdates(new Set(updates.map((_, i) => i)));
     }
   };
 
@@ -335,12 +356,23 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
 
       {/* Intelligence Updates */}
       <div>
-        <h2
-          className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] mb-6"
-          style={{ fontFamily: "var(--font-label)" }}
-        >
-          Intelligence Updates
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]"
+            style={{ fontFamily: "var(--font-label)" }}
+          >
+            Intelligence Updates
+          </h2>
+          {updates.length > 0 && (
+            <button
+              onClick={toggleAllUpdates}
+              className="text-xs font-medium text-[#4A5568] hover:text-[#1A1A2E] transition-colors"
+              style={{ fontFamily: "var(--font-label)" }}
+            >
+              {allUpdatesOpen ? "Collapse all" : "Expand all"}
+            </button>
+          )}
+        </div>
 
         {updates.length === 0 ? (
           <div className="text-center py-12">
@@ -351,47 +383,57 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-2">
             {updates.map((update, i) => (
               <div
                 key={i}
-                className="bg-white border border-[#E3E0D9] rounded-xl px-5 py-4"
+                className="bg-white border border-[#E3E0D9] rounded-xl overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#E3E0D9]">
-                  <span
-                    className="text-sm font-bold text-[#1A1A2E]"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    Update:{" "}
-                    {new Date(update.runDate).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                <button
+                  onClick={() => toggleUpdate(i)}
+                  className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-[#F9F8F5] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="text-sm font-bold text-[#1A1A2E]"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      Update:{" "}
+                      {new Date(update.runDate).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <span
+                      className="text-[10px] text-[#94A3B8] uppercase tracking-wider"
+                      style={{ fontFamily: "var(--font-label)" }}
+                    >
+                      {update.articlesProcessed} articles reviewed
+                    </span>
+                  </div>
+                  <span className="text-[#94A3B8] text-xs ml-2 shrink-0">
+                    {openUpdates.has(i) ? "▲" : "▼"}
                   </span>
-                  <span
-                    className="text-[10px] text-[#94A3B8] uppercase tracking-wider"
-                    style={{ fontFamily: "var(--font-label)" }}
-                  >
-                    {update.articlesProcessed} articles reviewed
-                  </span>
-                </div>
-
-                {update.sectionsTouched.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {update.sectionsTouched.map((s) => (
-                      <span
-                        key={s}
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-[#E8E8F4] text-[#1A1A2E]"
-                        style={{ fontFamily: "var(--font-label)" }}
-                      >
-                        {s}
-                      </span>
-                    ))}
+                </button>
+                {openUpdates.has(i) && (
+                  <div className="px-5 pb-4 border-t border-[#E3E0D9]">
+                    {update.sectionsTouched.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3 mb-3">
+                        {update.sectionsTouched.map((s) => (
+                          <span
+                            key={s}
+                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-[#E8E8F4] text-[#1A1A2E]"
+                            style={{ fontFamily: "var(--font-label)" }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <MarkdownBlock content={update.content} />
                   </div>
                 )}
-
-                <MarkdownBlock content={update.content} />
               </div>
             ))}
           </div>
