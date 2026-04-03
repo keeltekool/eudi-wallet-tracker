@@ -149,7 +149,7 @@ function MarkdownTable({ lines }: { lines: string[] }) {
                 className="text-left px-3 py-2 text-xs font-semibold text-[#1A1A2E] bg-[#E3E0D9]/50 border-b border-[#E3E0D9]"
                 style={{ fontFamily: "var(--font-label)" }}
               >
-                {cell}
+                <InlineMarkdown text={cell} />
               </th>
             ))}
           </tr>
@@ -188,7 +188,7 @@ function MarkdownBlock({ content }: { content: string }) {
           className="text-base font-bold text-[#1A1A2E] mt-5 mb-2"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          {line.replace(/^### /, "")}
+          <InlineMarkdown text={line.replace(/^### /, "")} />
         </h3>
       );
     } else if (line.startsWith("- ") || line.startsWith("  - ")) {
@@ -215,7 +215,7 @@ function MarkdownBlock({ content }: { content: string }) {
     } else if (line.startsWith("**") && line.endsWith("**")) {
       elements.push(
         <p key={i} className="text-sm font-semibold text-[#1A1A2E] mt-3 mb-1">
-          {line.replace(/\*\*/g, "")}
+          <InlineMarkdown text={line.replace(/\*\*/g, "")} />
         </p>
       );
     } else if (line.trim()) {
