@@ -91,7 +91,7 @@ function InlineMarkdown({ text }: { text: string }) {
     if (first.type === "bold") {
       parts.push(
         <strong key={key++} className="font-semibold text-[#1A1A2E]">
-          {first.match![1]}
+          <InlineMarkdown text={first.match![1]} />
         </strong>
       );
     } else if (first.type === "link") {
