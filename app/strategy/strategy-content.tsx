@@ -46,7 +46,12 @@ function parseBibleSections(
     });
   }
 
-  return sections;
+  // Filter out non-content sections (subtitle, empty)
+  return sections.filter(
+    (s) =>
+      s.content.length > 0 &&
+      !s.title.toLowerCase().includes("strategic intelligence reference")
+  );
 }
 
 function InlineMarkdown({ text }: { text: string }) {
@@ -230,6 +235,8 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
   const sections = parseBibleSections(bible);
   const [openSections, setOpenSections] = useState<Set<number>>(new Set());
 
+  const allOpen = openSections.size === sections.length;
+
   const toggleSection = (index: number) => {
     setOpenSections((prev) => {
       const next = new Set(prev);
@@ -237,6 +244,14 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
       else next.add(index);
       return next;
     });
+  };
+
+  const toggleAll = () => {
+    if (allOpen) {
+      setOpenSections(new Set());
+    } else {
+      setOpenSections(new Set(sections.map((_, i) => i)));
+    }
   };
 
   return (
@@ -269,14 +284,23 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
         )}
       </div>
 
-      {/* Bible — collapsible sections */}
+      {/* Collapsible sections */}
       <div className="space-y-2 mb-12">
-        <h2
-          className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] mb-3"
-          style={{ fontFamily: "var(--font-label)" }}
-        >
-          Strategic Reference
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]"
+            style={{ fontFamily: "var(--font-label)" }}
+          >
+            Strategic Reference
+          </h2>
+          <button
+            onClick={toggleAll}
+            className="text-xs font-medium text-[#4A5568] hover:text-[#1A1A2E] transition-colors"
+            style={{ fontFamily: "var(--font-label)" }}
+          >
+            {allOpen ? "Collapse all" : "Expand all"}
+          </button>
+        </div>
 
         {sections.map((section, i) => (
           <div
