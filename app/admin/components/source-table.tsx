@@ -51,7 +51,16 @@ const STATUS_ORDER: Record<StatusType, number> = {
   paused: 4,
 };
 
-export function SourceTable({ sources }: { sources: Source[] }) {
+export function SourceTable({ sources, allUrls }: { sources: Source[]; allUrls: string[] }) {
+  const [exportCopied, setExportCopied] = useState(false);
+
+  function handleExportUrls() {
+    const text = allUrls.join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setExportCopied(true);
+      setTimeout(() => setExportCopied(false), 2000);
+    });
+  }
   const router = useRouter();
 
   const [statusFilter, setStatusFilter] = useState<StatusType | "all">("all");
@@ -200,7 +209,16 @@ export function SourceTable({ sources }: { sources: Source[] }) {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Export + Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <button
+          onClick={handleExportUrls}
+          className="px-3 py-1 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:border-gray-400 transition-colors"
+        >
+          {exportCopied ? "Copied!" : "Export URLs"}
+        </button>
+        <span className="text-gray-200">|</span>
+      </div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex gap-1">
           {statusFilters.map((f) =>

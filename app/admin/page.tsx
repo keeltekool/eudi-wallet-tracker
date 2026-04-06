@@ -74,7 +74,10 @@ export default async function AdminPage() {
         {/* CSS setup prompt */}
         <SetupCssButton count={needsSetupCount} />
 
-        <SourceTable sources={allSources} />
+        <SourceTable
+          sources={allSources}
+          allUrls={allSources.map((s) => s.url)}
+        />
       </div>
     </div>
   );
