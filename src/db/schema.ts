@@ -102,6 +102,18 @@ export const livingDoc = pgTable("living_doc", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
+// ── Newsletter Subscribers ───────────────────────
+
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  subscribedAt: timestamp("subscribed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
+  active: boolean("active").notNull().default(true),
+});
+
 // ── Types ──────────────────────────────────────────
 
 export type SourceConfig = {
