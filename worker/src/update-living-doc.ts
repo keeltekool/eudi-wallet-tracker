@@ -36,6 +36,25 @@ async function updateLivingDoc() {
     console.log(
       `Update log inserted: ${data.update.sectionsTouched.length} sections touched`
     );
+
+    // Trigger newsletter send
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      "https://eudi-wallet-tracker.vercel.app";
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      try {
+        const sendRes = await fetch(`${baseUrl}/api/newsletter/send`, {
+          headers: { Authorization: `Bearer ${cronSecret}` },
+        });
+        const sendData = await sendRes.json();
+        console.log("Newsletter:", JSON.stringify(sendData));
+      } catch (err) {
+        console.error("Newsletter trigger failed (update still saved):", err);
+      }
+    } else {
+      console.log("CRON_SECRET not set, skipping newsletter trigger");
+    }
   }
 }
 
