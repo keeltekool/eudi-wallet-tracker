@@ -62,6 +62,17 @@ export function Header() {
           >
             Strategy Brief
           </Link>
+          <Link
+            href="/newsletter"
+            className={`text-xs font-semibold uppercase tracking-wider transition-colors ${
+              pathname === "/newsletter"
+                ? "text-[#1A1A2E]"
+                : "text-[#4A5568] hover:text-[#1A1A2E]"
+            }`}
+            style={{ fontFamily: "var(--font-label)" }}
+          >
+            Newsletter
+          </Link>
         </nav>
       </div>
     </header>
