@@ -66,16 +66,20 @@ DECISIONS_EOF
 cat "$LOCALAPPDATA/Temp/eudi-decisions.json" | npx tsx src/update-articles.ts
 ```
 
-## Step 4: Report
+## Step 4: Curation Report
 
 After updating, report:
 - How many articles processed
 - How many accepted vs rejected
 - Notable findings
 
-## Step 4: Living Document Update (Twice Monthly)
+Then continue to Step 5.
 
-**Check if this step should run:**
+## Step 5: Strategy Brief Update
+
+**This step ALWAYS runs.** The pipeline is manually triggered by the user, who controls the cadence (typically weekly). When triggered, run the full pipeline end-to-end: filter → curate → Strategy Brief update. No automatic skipping.
+
+**Check last update date (for article query window only):**
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker
@@ -85,16 +89,14 @@ require('dotenv').config({ path: '.env.local' });
 const sql = neon(process.env.DATABASE_URL);
 sql\`SELECT run_date FROM living_doc WHERE section = 'update' ORDER BY run_date DESC LIMIT 1\`.then(r => {
   if (r.length === 0) { console.log('NEVER'); return; }
-  const days = (Date.now() - new Date(r[0].run_date).getTime()) / 86400000;
-  console.log(days >= 12 ? 'RUN' : 'SKIP (' + Math.round(days) + ' days since last)');
+  console.log(r[0].run_date.toISOString());
 }).catch(e => console.error(e));
 "
 ```
 
-If output is `SKIP` → stop here, you're done for this run.
-If output is `RUN` or `NEVER` → continue with Step 4.
+Use this date in Step 5b to query only articles accepted since last update.
 
-### 4a: Read the Strategy Brief from Neon
+### 5a: Read the Strategy Brief from Neon
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker
@@ -108,16 +110,16 @@ sql\`SELECT content FROM living_doc WHERE section = 'bible' LIMIT 1\`.then(r => 
 
 Read the full output. This is the current state of the Living Strategy Document. You need to understand every section, every fact, every open question before analyzing articles.
 
-### 4b: Read new accepted articles
+### 5b: Read new accepted articles
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker
 npx tsx src/living-doc-articles.ts <LAST_UPDATE_DATE_ISO>
 ```
 
-Use the date from the cadence check. If `NEVER`, omit the date to get all articles.
+Use the date from Step 5's date check. If `NEVER`, omit the date to get all articles.
 
-### 4c: Intelligence Analysis
+### 5c: Intelligence Analysis
 
 For each article, test against the Strategy Brief. Four criteria, in order:
 
@@ -130,7 +132,7 @@ For each article, test against the Strategy Brief. Four criteria, in order:
 
 **Quality bar:** Would an SK product strategist learn something genuinely new from this item? If not, cut it. 0-2 genuine items beats 8 weak ones. An empty update ("No actionable new intelligence this cycle") is a valid and respectable outcome.
 
-### 4d: Compose the update log
+### 5d: Compose the update log
 
 ```
 ## Update: YYYY-MM-DD
@@ -145,14 +147,14 @@ Articles reviewed: N | New intelligence: N | Strategy Brief changes: N
 [List sections with nothing new]
 ```
 
-### 4e: Apply Strategy Brief changes (if any)
+### 5e: Apply Strategy Brief changes (if any)
 
 If any items classified as `NEW_FACT`, `UPDATED_FACT`, or `RESOLVED_QUESTION`:
 - Read the current Strategy Brief text
 - Apply surgical changes: add new facts, replace updated facts (note old value), remove resolved open questions and add answers to section body
 - Never rewrite sections with no new information
 
-### 4f: Write updated Strategy Brief to Google Drive (if changed)
+### 5f: Write updated Strategy Brief to Google Drive (if changed)
 
 If the Strategy Brief text was changed in Step 4e, overwrite the master `.md` file in Google Drive:
 
@@ -164,7 +166,7 @@ BRIEF_EOF
 
 This file in Google Drive IS the master source. No Google Docs API involved.
 
-### 4g: Write to Neon
+### 5g: Write to Neon
 
 ```bash
 cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker
@@ -182,7 +184,7 @@ LIVINGDOC_EOF
 cat "$LOCALAPPDATA/Temp/eudi-living-doc.json" | npx tsx src/update-living-doc.ts
 ```
 
-### 4h: Report
+### 5h: Report
 
 Add to your run report:
 - Living Doc: Updated / Skipped (N days since last)
@@ -194,7 +196,7 @@ Add to your run report:
 - **BE STRICT.** When in doubt, reject. A smaller, high-quality feed beats a bloated one.
 - Summaries for an SK ID Solutions product strategist — implications, not just facts.
 - Use `$LOCALAPPDATA/Temp/` for temp files on Windows.
-- **Living Doc:** Step 4 only runs if 12+ days since last update. Don't force it.
-- **Living Doc:** Strategy Brief changes are surgical. Never rewrite a section that has no new information.
-- **Living Doc:** In update log text, always refer to the main document as "the Strategy Brief" — never use internal shorthand like "Bible".
-- **Living Doc:** An empty update ("No actionable new intelligence") is a valid outcome. Don't manufacture insights.
+- **Strategy Brief:** ALWAYS runs when the pipeline is triggered. No automatic skipping. The user controls cadence.
+- **Strategy Brief:** Changes are surgical. Never rewrite a section that has no new information.
+- **Strategy Brief:** In update log text, always refer to the main document as "the Strategy Brief" — never use internal shorthand like "Bible".
+- **Strategy Brief:** An empty update ("No actionable new intelligence") is a valid outcome. Don't manufacture insights.

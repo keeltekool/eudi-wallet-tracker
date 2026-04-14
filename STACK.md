@@ -48,14 +48,13 @@ Password-protected via cookie gate (`ADMIN_PASSWORD` env var).
 ```
 Scraper (GitHub Actions, Wed+Sat 06:00 UTC)
   → pending articles in Neon
-Filter Loop (Claude Code, 06:33 UTC) — LCC ID: 929cf3c2
-  → marks relevant / irrelevant (loose topic match, when in doubt → relevant)
-Curation Loop (Claude Code, 07:33 UTC) — LCC ID: 28e1088d
-  → scores 1-10, threshold 8 (strict EUDI-specific only)
-  → writes summaries + categories → accepted / rejected
-  → twice-monthly: updates Strategy Brief in Neon + Google Drive .md file
-Newsletter (triggered by update-living-doc.ts after curation)
-  → sends latest intelligence update to subscribers via Brevo
+AI Pipeline (manually triggered, runs full sequence):
+  1. Filter — marks relevant / irrelevant (loose topic match)
+  2. Curate — scores 1-10, threshold 8, writes summaries + categories
+  3. Strategy Brief update — analyzes accepted articles against Strategy Brief,
+     applies surgical changes, writes to Neon + Google Drive .md file
+  4. Newsletter — triggered automatically after Strategy Brief update via Brevo
+User controls cadence (typically weekly). No automatic scheduling gates.
 ```
 
 ### Dashboard Tabs (public)
@@ -81,7 +80,7 @@ cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md
 
 - **Dashboard:** auto-deploys on push to `master` via Vercel
 - **Scraper:** GitHub Actions workflow `scrape.yml` — cron or manual `workflow_dispatch`
-- **AI Loops:** `/sync-loops` in a Claude Code session restores both loops
+- **AI Pipeline:** Manually triggered by user in Claude Code session. Runs filter → curate → Strategy Brief update → newsletter sequentially.
 
 ## Gotchas
 
@@ -93,7 +92,7 @@ cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md
 | Render removed free background worker tier | Switched to GitHub Actions (free for public repos) |
 | Next.js 16 middleware deprecation warning | Still works, but `proxy` is the new convention |
 | `npm ci` fails with workspaces in GitHub Actions | Use `npm install` instead |
-| AI loops only run when Claude Code is open | Run `/sync-loops` in a dedicated session, keep it open |
+| AI pipeline only runs when Claude Code is open | Manually triggered by user, runs full sequence in one session |
 | Newsletter send route must be GET | Vercel crons (and manual triggers) send GET — never export POST |
 | Deleting source with FK on articles | FK constraint removed — `articles.sourceId` is a plain integer, no cascade needed |
 | Strict curation changed article counts | Threshold 8 (was looser) — curated count dropped from ~137 to ~76. Quality over quantity. |
