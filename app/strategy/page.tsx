@@ -31,11 +31,6 @@ export default async function StrategyPage() {
             articlesProcessed: u.articlesProcessed || 0,
             sectionsTouched: (u.sectionsTouched as string[]) || [],
           }))}
-          googleDocUrl={
-            process.env.LIVING_DOC_ID
-              ? `https://docs.google.com/document/d/${process.env.LIVING_DOC_ID}/edit`
-              : null
-          }
         />
       </main>
     </div>

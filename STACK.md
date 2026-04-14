@@ -1,6 +1,6 @@
 # EUDI Wallet Tracker — Stack
 
-> Last updated: 2026-04-12
+> Last updated: 2026-04-14
 
 ## Services
 
@@ -12,6 +12,7 @@
 | **Anthropic API** | One-off CSS selector analysis (~$0.01/source) | `ANTHROPIC_API_KEY` |
 | **Loop Control Center** | Filter + curation loop management | LCC API key in LCC `.env.local` |
 | **Brevo** | Newsletter email delivery (separate API key from WHO DIS?) | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` |
+| **Google Drive** | Master Strategy Brief `.md` file (`G:\My Drive\SK_RE\EUDW\EUDI_Wallet_Strategy_Brief_Clean.md`) | — |
 | **Google Fonts** | Fraunces, DM Sans, Epilogue, JetBrains Mono | — |
 
 ## Brand
@@ -52,6 +53,7 @@ Filter Loop (Claude Code, 06:33 UTC) — LCC ID: 929cf3c2
 Curation Loop (Claude Code, 07:33 UTC) — LCC ID: 28e1088d
   → scores 1-10, threshold 8 (strict EUDI-specific only)
   → writes summaries + categories → accepted / rejected
+  → twice-monthly: updates Strategy Brief in Neon + Google Drive .md file
 Newsletter (triggered by update-living-doc.ts after curation)
   → sends latest intelligence update to subscribers via Brevo
 ```
@@ -60,6 +62,7 @@ Newsletter (triggered by update-living-doc.ts after curation)
 - **All Articles:** raw firehose, all statuses, basic cards
 - **Filtered:** EUDI-relevant articles (includes rejected-by-curation — still topic-relevant)
 - **Curated:** AI-scored 8+ only, enriched cards with summaries + category badges + relevance scores
+- **Strategy Brief:** 13 collapsible sections (Exec Summary + 11 numbered sections + Changelog) + Intelligence Updates
 
 ## Dev
 
@@ -71,6 +74,7 @@ cd worker && npx tsx src/filter.ts # Read pending for filter
 cd worker && npx tsx src/curate.ts # Read relevant for curation
 npm run db:push                    # Push schema to Neon
 npm run db:studio                  # Drizzle Studio
+cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md file
 ```
 
 ## Deploy
@@ -93,6 +97,7 @@ npm run db:studio                  # Drizzle Studio
 | Newsletter send route must be GET | Vercel crons (and manual triggers) send GET — never export POST |
 | Deleting source with FK on articles | FK constraint removed — `articles.sourceId` is a plain integer, no cascade needed |
 | Strict curation changed article counts | Threshold 8 (was looser) — curated count dropped from ~137 to ~76. Quality over quantity. |
+| Google Drive `.md` file = master brief | `EUDI_Wallet_Strategy_Brief_Clean.md` in `G:\My Drive\SK_RE\EUDW\`. NOT the `_NEW` file (has escaped markdown from Docs export). Seed via `seed-bible.ts`. Google Docs decommissioned April 2026. |
 
 ## Post-Deploy Smoke Tests
 

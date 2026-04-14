@@ -12,7 +12,6 @@ type Update = {
 type Props = {
   bible: string;
   updates: Update[];
-  googleDocUrl: string | null;
 };
 
 function parseBibleSections(
@@ -210,6 +209,21 @@ function MarkdownBlock({ content }: { content: string }) {
       }
       i--;
       elements.push(<MarkdownTable key={i} lines={tableLines} />);
+    } else if (line.startsWith("> ")) {
+      const quoteLines: string[] = [];
+      while (i < lines.length && lines[i].startsWith("> ")) {
+        quoteLines.push(lines[i].replace(/^> /, ""));
+        i++;
+      }
+      i--;
+      elements.push(
+        <blockquote
+          key={i}
+          className="border-l-3 border-[#E3E0D9] pl-4 py-1 my-3 italic text-sm text-[#4A5568]"
+        >
+          <InlineMarkdown text={quoteLines.join(" ")} />
+        </blockquote>
+      );
     } else if (line.trim() === "" || line.startsWith("---")) {
       // skip
     } else if (line.startsWith("**") && line.endsWith("**")) {
@@ -231,7 +245,7 @@ function MarkdownBlock({ content }: { content: string }) {
   return <div>{elements}</div>;
 }
 
-export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
+export function StrategyContent({ bible, updates }: Props) {
   const sections = parseBibleSections(bible);
   const [openSections, setOpenSections] = useState<Set<number>>(new Set());
   const [openUpdates, setOpenUpdates] = useState<Set<number>>(
@@ -292,17 +306,6 @@ export function StrategyContent({ bible, updates, googleDocUrl }: Props) {
           This document is continuously updated by an automated curation
           pipeline monitoring 36+ EUDI Wallet sources.
         </p>
-        {googleDocUrl && (
-          <a
-            href={googleDocUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6366F1] hover:text-[#4338CA] transition-colors"
-            style={{ fontFamily: "var(--font-label)" }}
-          >
-            Open in Google Docs →
-          </a>
-        )}
       </div>
 
       {/* Collapsible sections */}

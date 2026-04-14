@@ -152,14 +152,17 @@ If any items classified as `NEW_FACT`, `UPDATED_FACT`, or `RESOLVED_QUESTION`:
 - Apply surgical changes: add new facts, replace updated facts (note old value), remove resolved open questions and add answers to section body
 - Never rewrite sections with no new information
 
-### 4f: Write to Google Doc
+### 4f: Write updated Strategy Brief to Google Drive (if changed)
 
-Append the update log entry:
+If the Strategy Brief text was changed in Step 4e, overwrite the master `.md` file in Google Drive:
+
 ```bash
-gws docs +write --document 1IjPRgPSB72Igoe0dr7Jh95N6nhg3J_NIA0dGee1JjTc --text '<the update log entry>'
+cat > "G:/My Drive/SK_RE/EUDW/EUDI_Wallet_Strategy_Brief_Clean.md" << 'BRIEF_EOF'
+<full updated Strategy Brief markdown>
+BRIEF_EOF
 ```
 
-If Strategy Brief text was changed, the full updated text goes to Google Doc via `gws docs documents batchUpdate`.
+This file in Google Drive IS the master source. No Google Docs API involved.
 
 ### 4g: Write to Neon
 
