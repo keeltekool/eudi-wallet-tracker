@@ -6,6 +6,17 @@ import { NextResponse } from "next/server";
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 const BASE_URL = "https://eudi-wallet-tracker.vercel.app";
 
+function convertBold(html: string): string {
+  return html.replace(
+    /\*\*([^*]+)\*\*/g,
+    '<strong style="color:#1A1A2E">$1</strong>'
+  );
+}
+
+function formatLine(escaped: string): string {
+  return convertLinks(convertBold(escaped));
+}
+
 function markdownToHtml(md: string): string {
   return md
     .split("\n")
@@ -15,19 +26,19 @@ function markdownToHtml(md: string): string {
       if (line.startsWith("### "))
         return `<h3 style="color:#1A1A2E;font-size:15px;font-weight:700;margin:20px 0 6px 0;font-family:Georgia,serif">${escapeHtml(line.slice(4))}</h3>`;
       if (line.trim().startsWith("→"))
-        return `<p style="color:#4A5568;font-size:12px;line-height:1.5;margin:2px 0 2px 24px;padding-left:8px;border-left:2px solid #E3E0D9">${convertLinks(escapeHtml(line.trim().slice(2)))}</p>`;
+        return `<p style="color:#4A5568;font-size:12px;line-height:1.5;margin:2px 0 2px 24px;padding-left:8px;border-left:2px solid #E3E0D9">${formatLine(escapeHtml(line.trim().slice(2)))}</p>`;
       if (line.trim().startsWith("- ")) {
         const text = line.trim().slice(2);
         const highlighted = escapeHtml(text).replace(
           /\[(NEW_FACT|UPDATED_FACT|RESOLVED_QUESTION|DEEPENED_INSIGHT)\]/g,
           '<span style="background:#FFD166;color:#1A1A2E;padding:1px 6px;font-size:10px;font-weight:700;letter-spacing:0.5px">$1</span>'
         );
-        return `<li style="color:#1A1A2E;font-size:13px;line-height:1.5;margin:6px 0;list-style:none;padding-left:12px">${convertLinks(highlighted)}</li>`;
+        return `<li style="color:#1A1A2E;font-size:13px;line-height:1.5;margin:6px 0;list-style:none;padding-left:12px">${formatLine(highlighted)}</li>`;
       }
       if (line.startsWith("Articles reviewed:"))
         return `<p style="color:#94A3B8;font-size:11px;letter-spacing:0.5px;margin:4px 0 16px 0">${escapeHtml(line)}</p>`;
       if (line.trim() === "") return "";
-      return `<p style="color:#4A5568;font-size:13px;line-height:1.5;margin:4px 0">${convertLinks(escapeHtml(line))}</p>`;
+      return `<p style="color:#4A5568;font-size:13px;line-height:1.5;margin:4px 0">${formatLine(escapeHtml(line))}</p>`;
     })
     .join("\n");
 }
@@ -134,6 +145,9 @@ ${bodyHtml}
 </div>
 <div style="text-align:center;margin:28px 0 0">
 <a href="${BASE_URL}/strategy" style="display:inline-block;background:#FFD166;color:#1A1A2E;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:12px 32px;text-decoration:none">View Full Strategy Brief</a>
+</div>
+<div style="text-align:center;margin:12px 0 0">
+<a href="${BASE_URL}" style="color:#6366F1;font-size:12px;text-decoration:underline">Open EUDI Tracker Dashboard</a>
 </div>
 <hr style="border:none;border-top:1px solid #E3E0D9;margin:28px 0"/>
 <p style="color:#94A3B8;font-size:11px;text-align:center;line-height:1.6">You're receiving this because you subscribed to EUDI Tracker intelligence updates.</p>

@@ -8,13 +8,38 @@ You are the relevance filter for the EUDI Wallet Tracker. Your job is simple: re
 
 This is a loose filter, not strict curation. If there's any connection to digital wallets, digital identity, eIDAS, trust services, or related EU regulation — it passes. You're removing obvious noise (general cybersecurity, unrelated tech, marketing), not judging quality.
 
+**Context on volume:** The scraper casts a wide net (Google News, RSS feeds, etc.) and typically pulls 50-100+ raw articles per run. Most are noise — general EU tech news, unrelated wallets, startup fluff, etc. After filtering, expect roughly 20-40% to be marked relevant. This is normal. The filter step exists precisely to separate signal from noise before the strict curation step.
+
+## Step 0: Determine the date window
+
+Before reading articles, check when the last full loop ran:
+
+```bash
+cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker
+node -e "
+const { neon } = require('@neondatabase/serverless');
+require('dotenv').config({ path: '.env.local' });
+const sql = neon(process.env.DATABASE_URL);
+sql\`SELECT run_date FROM living_doc WHERE section = 'update' ORDER BY run_date DESC LIMIT 1\`.then(r => {
+  if (r.length === 0) { console.log('NEVER'); return; }
+  console.log(r[0].run_date.toISOString().split('T')[0]);
+}).catch(e => console.error(e));
+"
+```
+
+Use this date as the `--since` parameter in Step 1. This ensures you only process articles published after the last loop run — not historical articles the scraper picked up from RSS feed backlogs.
+
 ## Step 1: Read Pending Articles
 
 ```bash
-cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker && npx tsx src/filter.ts
+cd C:\Users\Kasutaja\Claude_Projects\eudi-wallet-tracker\worker && npx tsx src/filter.ts --since=<LAST_RUN_DATE>
 ```
 
+Example: `npx tsx src/filter.ts --since=2026-04-12`
+
 Outputs JSON. If `count` is 0, log "Nothing to filter" and stop.
+
+**Note:** Old pending articles from before the last run date are intentionally skipped. They are RSS backlog noise — bulk-mark them irrelevant separately if needed.
 
 ## Step 2: Decide Relevance for Each Article
 

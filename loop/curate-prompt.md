@@ -147,6 +147,13 @@ Articles reviewed: N | New intelligence: N | Strategy Brief changes: N
 [List sections with nothing new]
 ```
 
+**CRITICAL: EVERY article mentioned in the update log MUST include a `→ Source: [Article title](url)` link.** This applies to ALL articles — whether they produced new intelligence or not. If an article is mentioned as "confirming known topics" or "no new intelligence," it still gets a source link. The update log is useless without clickable sources. Example for zero-intelligence updates:
+
+```
+- **European digital identity wallets: security and risks** — General security analysis, confirms known topics.
+  → Source: [European digital identity wallets: how secure are they and what are the risks?](https://example.com/article-url)
+```
+
 ### 5e: Apply Strategy Brief changes (if any)
 
 If any items classified as `NEW_FACT`, `UPDATED_FACT`, or `RESOLVED_QUESTION`:

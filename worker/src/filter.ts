@@ -7,7 +7,7 @@ config({ path: "../.env.local" });
 
 import { createDb } from "../../src/db/index";
 import { articles, sources } from "../../src/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, and, gte, inArray } from "drizzle-orm";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -18,6 +18,15 @@ if (!DATABASE_URL) {
 async function main() {
   const db = createDb(DATABASE_URL!);
 
+  // Optional --since flag to only process articles published after a date
+  const sinceArg = process.argv.find((a) => a.startsWith("--since="));
+  const sinceDate = sinceArg ? new Date(sinceArg.split("=")[1]) : null;
+
+  const conditions = [eq(articles.status, "pending")];
+  if (sinceDate) {
+    conditions.push(gte(articles.publishedAt, sinceDate));
+  }
+
   const pending = await db
     .select({
       id: articles.id,
@@ -27,7 +36,7 @@ async function main() {
       sourceId: articles.sourceId,
     })
     .from(articles)
-    .where(eq(articles.status, "pending"))
+    .where(and(...conditions))
     .limit(100);
 
   if (pending.length === 0) {
