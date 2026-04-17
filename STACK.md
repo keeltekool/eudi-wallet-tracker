@@ -110,3 +110,21 @@ cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md
 8. Click a broken source → "Fix with AI" banner visible
 9. Visit `/newsletter` — subscribe page renders, form works
 10. **Newsletter:** Trigger manually: `GET /api/newsletter/send` with `Authorization: Bearer <CRON_SECRET>` — must return `{ sent: N }` with `errors: 0`
+
+## Federated Admin (2026-04-17)
+
+Admin now serves multiple projects via a cookie-based connection router:
+
+- `selected_project_id` cookie (values: `"eudi"` | `"allekirjoitus"`, default `"eudi"`) controls which Neon database admin reads/writes.
+- `src/lib/db/connections.ts` → `getDbForProject(projectId)` returns the correct Drizzle client.
+- `src/lib/project-context.ts` → `getSelectedProject()` reads the cookie (server-side).
+- `app/admin/components/project-switcher.tsx` — client-side dropdown in admin chrome.
+- `src/db/schema-allekirjoitus.ts` — schema copy for type-safe queries against the Allekirjoitus Neon instance (separate Neon project, connection string in `DATABASE_URL_ALLEKIRJOITUS`).
+
+**Zero changes** to EUDI's worker, filter, curate, brief-update, or newsletter code paths. Admin UI stays visually identical (plain gray Tailwind).
+
+Projects sharing the admin:
+- `eudi` — this project (EUDI Wallet Tracker). Data in `DATABASE_URL` Neon instance.
+- `allekirjoitus` — Allekirjoitus Competitive Intel Tracker (separate repo `allekirjoitus-competitive-tracker`). Data in `DATABASE_URL_ALLEKIRJOITUS` Neon instance.
+
+See `../Allekirjoitus-benchmark-agent/docs/plans/2026-04-17-allekirjoitus-competitive-intel-tracker.md` for the full plan.
