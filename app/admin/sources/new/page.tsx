@@ -1,15 +1,12 @@
-import { db } from "@/src/db/client";
-import { sources } from "@/src/db/schema";
 import Link from "next/link";
-import { AddSourceForm } from "./add-source-form";
+import { getSelectedProject } from "@/src/lib/project-context";
+import { EudiCreateSourceView } from "./_components/eudi-create-form";
+import { AllekirjoitusCreateForm } from "./_components/allekirjoitus-create-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewSourcePage() {
-  // Pass existing URLs to the client for duplicate detection
-  const existingSources = await db
-    .select({ url: sources.url, name: sources.name })
-    .from(sources);
+  const projectId = await getSelectedProject();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -21,9 +18,11 @@ export default async function NewSourcePage() {
           &larr; Back to sources
         </Link>
         <h1 className="text-2xl font-bold mt-4 mb-6">Add Source</h1>
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <AddSourceForm existingSources={existingSources} />
-        </div>
+        {projectId === "eudi" ? (
+          <EudiCreateSourceView />
+        ) : (
+          <AllekirjoitusCreateForm />
+        )}
       </div>
     </div>
   );

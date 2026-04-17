@@ -1,7 +1,13 @@
 import Link from "next/link";
-import { BulkImportForm } from "./bulk-import-form";
+import { getSelectedProject } from "@/src/lib/project-context";
+import { EudiBulkImportView } from "./_components/eudi-bulk-import";
+import { AllekirjoitusBulkImport } from "./_components/allekirjoitus-bulk-import";
 
-export default function ImportSourcesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ImportSourcesPage() {
+  const projectId = await getSelectedProject();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -12,12 +18,11 @@ export default function ImportSourcesPage() {
           &larr; Back to sources
         </Link>
         <h1 className="text-2xl font-bold mt-4 mb-2">Bulk Import Sources</h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Paste the JSON output from AI source research, or upload a{" "}
-          <code>.json</code> file. Duplicates are detected automatically.
-          See the format spec below — give it to the AI as output rules.
-        </p>
-        <BulkImportForm />
+        {projectId === "eudi" ? (
+          <EudiBulkImportView />
+        ) : (
+          <AllekirjoitusBulkImport />
+        )}
       </div>
     </div>
   );

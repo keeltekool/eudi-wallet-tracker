@@ -2,16 +2,13 @@ import { getDbForProject } from "@/src/lib/db/connections";
 import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
 import { desc } from "drizzle-orm";
 import Link from "next/link";
+import { AllekirjoitusRowActions } from "./allekirjoitus-row-actions";
 
 /**
- * Allekirjoitus sources view — read-only list of competitor URLs.
- *
- * V1 scope: display-only. Bulk actions, toggles, and delete wiring are deferred
- * to Phase 2 Chunk E. The "Active" toggle renders as a static checkbox stub
- * here (no POST handler attached yet).
- *
- * Styling matches the existing gray-Tailwind admin chrome — no Allekirjoitus
- * branding accents leak into the EUDI-looking admin UI in this chunk.
+ * Allekirjoitus sources view — list of competitor URLs with wired-up
+ * active toggle + delete (Phase 2 Chunk E). Styling matches the existing
+ * gray-Tailwind admin chrome — no Allekirjoitus branding accents leak into
+ * the EUDI-looking admin UI in this chunk.
  */
 
 type Theme =
@@ -78,6 +75,20 @@ export async function AllekirjoitusSourcesView() {
               </Link>
             </p>
           </div>
+          <div className="flex gap-3">
+            <Link
+              href="/admin/sources/import"
+              className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Bulk import
+            </Link>
+            <Link
+              href="/admin/sources/new"
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Add source
+            </Link>
+          </div>
         </div>
 
         {rows.length === 0 ? (
@@ -101,7 +112,7 @@ export async function AllekirjoitusSourcesView() {
                     Theme
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-500">
-                    Active
+                    Actions
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-500">
                     Last Scraped
@@ -162,13 +173,10 @@ export async function AllekirjoitusSourcesView() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {/* Stub toggle — wiring lands in Chunk E. */}
-                      <input
-                        type="checkbox"
-                        checked={source.active}
-                        readOnly
-                        aria-label={`Source ${source.competitor} active`}
-                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                      <AllekirjoitusRowActions
+                        sourceId={source.id}
+                        competitor={source.competitor}
+                        initialActive={source.active}
                       />
                     </td>
                     <td className="px-4 py-3 text-gray-500">
