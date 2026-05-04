@@ -29,14 +29,78 @@ type PreviewData = {
   };
 };
 
-const EXAMPLE = `competitor\turl\ttheme\tpurpose
-scrive\thttps://scrive.com/pricing\tpricing\tScrive main pricing page
-dokobit\thttps://www.dokobit.com/features\tfeatures\tFeature overview
-signicat\thttps://www.signicat.com/integrations\tintegrations\t`;
+const COMPETITOR_MAP: Record<string, { competitor: string; defaultTheme: string }> = {
+  "docusign.com": { competitor: "docusign", defaultTheme: "market" },
+  "adobe.com": { competitor: "adobe-sign", defaultTheme: "market" },
+  "dropboxsign.com": { competitor: "dropbox-sign", defaultTheme: "market" },
+  "pandadoc.com": { competitor: "pandadoc", defaultTheme: "market" },
+  "namirial.com": { competitor: "namirial", defaultTheme: "market" },
+  "yousign.com": { competitor: "yousign", defaultTheme: "market" },
+  "universign.com": { competitor: "universign", defaultTheme: "market" },
+  "skribble.com": { competitor: "skribble", defaultTheme: "market" },
+  "sproof.io": { competitor: "sproof", defaultTheme: "market" },
+  "penneo.com": { competitor: "penneo", defaultTheme: "market" },
+  "scrive.com": { competitor: "scrive", defaultTheme: "market" },
+  "dokobit.com": { competitor: "dokobit", defaultTheme: "market" },
+  "signicat.com": { competitor: "signicat", defaultTheme: "market" },
+  "vismasign.fi": { competitor: "visma-sign", defaultTheme: "market" },
+  "contractbook.com": { competitor: "scrive", defaultTheme: "market" },
+};
+
+const THEME_HINTS: Record<string, string> = {
+  pricing: "pricing",
+  hinnoittelu: "pricing",
+  price: "pricing",
+  plans: "pricing",
+  feature: "features",
+  product: "features",
+  ominaisuudet: "features",
+  integration: "integrations",
+  integraatiot: "integrations",
+  connector: "integrations",
+  eid: "eid",
+  auth: "eid",
+  compliance: "compliance",
+  trust: "compliance",
+  security: "compliance",
+  tietoturva: "compliance",
+  blog: "market",
+  press: "market",
+  news: "market",
+  wallet: "eudi-wallet",
+  eudi: "eudi-wallet",
+  eidas: "eudi-wallet",
+};
+
+function detectFromUrl(rawUrl: string): BulkEntry | null {
+  try {
+    const url = new URL(rawUrl.trim());
+    const host = url.hostname.replace(/^www\./, "");
+    const path = url.pathname.toLowerCase();
+
+    const mapped = COMPETITOR_MAP[host];
+    const competitor = mapped?.competitor || host.split(".")[0];
+
+    let theme = mapped?.defaultTheme || "market";
+    for (const [hint, t] of Object.entries(THEME_HINTS)) {
+      if (path.includes(hint)) {
+        theme = t;
+        break;
+      }
+    }
+
+    const pathLabel = path.replace(/^\/|\/$/g, "").replace(/\//g, " › ") || "homepage";
+    const purpose = `${competitor} ${pathLabel}`;
+
+    return { competitor, url: rawUrl.trim(), theme, purpose };
+  } catch {
+    return null;
+  }
+}
 
 const HEADER_FIELDS = ["competitor", "url", "theme", "purpose"];
 
-function parseTSV(input: string): BulkEntry[] {
+function parseInput(input: string): BulkEntry[] {
   const rows = input
     .split(/\r?\n/)
     .map((r) => r.trim())
@@ -45,21 +109,40 @@ function parseTSV(input: string): BulkEntry[] {
 
   const firstCols = rows[0].split("\t").map((c) => c.trim().toLowerCase());
   const hasHeader = HEADER_FIELDS.every((f) => firstCols.includes(f));
-  const dataRows = hasHeader ? rows.slice(1) : rows;
+  const isTSV = rows[0].includes("\t") && !rows[0].startsWith("http");
 
-  return dataRows.map((row) => {
-    // Support tab-separated or comma-separated (fallback only if no tabs)
-    const cols = row.includes("\t")
-      ? row.split("\t").map((c) => c.trim())
-      : row.split(",").map((c) => c.trim());
-    return {
-      competitor: cols[0] ?? "",
-      url: cols[1] ?? "",
-      theme: cols[2] ?? "",
-      purpose: cols[3] ?? "",
-    };
-  });
+  if (isTSV || hasHeader) {
+    const dataRows = hasHeader ? rows.slice(1) : rows;
+    return dataRows.map((row) => {
+      const cols = row.includes("\t")
+        ? row.split("\t").map((c) => c.trim())
+        : row.split(",").map((c) => c.trim());
+      return {
+        competitor: cols[0] ?? "",
+        url: cols[1] ?? "",
+        theme: cols[2] ?? "",
+        purpose: cols[3] ?? "",
+      };
+    });
+  }
+
+  const entries: BulkEntry[] = [];
+  for (const row of rows) {
+    const detected = detectFromUrl(row);
+    if (detected) {
+      entries.push(detected);
+    } else {
+      entries.push({ competitor: "", url: row, theme: "", purpose: "" });
+    }
+  }
+  return entries;
 }
+
+const EXAMPLE_URLS = `https://www.docusign.com/products/esignature/pricing
+https://www.docusign.com/blog
+https://www.adobe.com/sign/pricing/plans.html
+https://yousign.com/pricing
+https://yousign.com/blog`;
 
 export function AllekirjoitusBulkImport() {
   const router = useRouter();
@@ -76,9 +159,9 @@ export function AllekirjoitusBulkImport() {
     setPreview(null);
     setImportDone(false);
 
-    const entries = parseTSV(text);
+    const entries = parseInput(text);
     if (entries.length === 0) {
-      setError("No rows parsed. Paste at least one row.");
+      setError("No rows parsed. Paste at least one URL.");
       setPreviewing(false);
       return;
     }
@@ -105,7 +188,7 @@ export function AllekirjoitusBulkImport() {
   async function handleImport() {
     if (!preview) return;
     setImporting(true);
-    const entries = parseTSV(text);
+    const entries = parseInput(text);
 
     const res = await fetch("/api/sources/bulk", {
       method: "POST",
@@ -132,20 +215,20 @@ export function AllekirjoitusBulkImport() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-gray-500">
-        Paste tab-separated rows (one competitor URL per row). Columns:{" "}
-        <code>competitor</code>, <code>url</code>, <code>theme</code>,{" "}
-        <code>purpose</code> (optional). First line may be an optional header.
+        Paste URLs (one per line). Competitor name and theme are auto-detected
+        from the URL. You can also paste tab-separated rows if you want to
+        override.
       </p>
 
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-medium text-gray-700">
-            Competitor URLs (TSV)
+            Competitor URLs
           </label>
           <button
             type="button"
             onClick={() => {
-              setText(EXAMPLE);
+              setText(EXAMPLE_URLS);
               setPreview(null);
               setImportDone(false);
             }}
@@ -162,7 +245,7 @@ export function AllekirjoitusBulkImport() {
             setImportDone(false);
           }}
           rows={12}
-          placeholder={EXAMPLE}
+          placeholder={`Paste URLs, one per line:\nhttps://www.docusign.com/products/esignature/pricing\nhttps://yousign.com/pricing\nhttps://penneo.com/blog/`}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm font-mono"
         />
 
@@ -178,7 +261,7 @@ export function AllekirjoitusBulkImport() {
             disabled={previewing || !text.trim()}
             className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
-            {previewing ? "Validating..." : "Preview import"}
+            {previewing ? "Detecting..." : "Preview import"}
           </button>
         </div>
       </div>
@@ -309,29 +392,22 @@ export function AllekirjoitusBulkImport() {
 
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h3 className="text-sm font-medium text-gray-700 mb-2">
-          Expected format
+          How it works
         </h3>
         <div className="text-xs text-gray-500 space-y-1">
-          <p>Tab-separated rows. First line may be a header. Fields:</p>
+          <p>Paste URLs one per line. The importer auto-detects:</p>
           <ul className="list-disc list-inside space-y-0.5 ml-2">
             <li>
-              <code className="bg-gray-100 px-1 rounded">competitor</code> —
-              required, free-form label
+              <strong>Competitor</strong> — from the domain (e.g. docusign.com → docusign)
             </li>
             <li>
-              <code className="bg-gray-100 px-1 rounded">url</code> — required,
-              https://
-            </li>
-            <li>
-              <code className="bg-gray-100 px-1 rounded">theme</code> — required:
-              pricing, features, integrations, eid, compliance, market,
-              eudi-wallet
-            </li>
-            <li>
-              <code className="bg-gray-100 px-1 rounded">purpose</code> —
-              optional short description
+              <strong>Theme</strong> — from the URL path (e.g. /pricing → pricing, /blog → market)
             </li>
           </ul>
+          <p className="mt-2">
+            You can also paste tab-separated rows to override:{" "}
+            <code className="bg-gray-100 px-1 rounded">competitor → url → theme → purpose</code>
+          </p>
         </div>
       </div>
     </div>

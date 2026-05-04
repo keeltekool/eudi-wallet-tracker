@@ -35,7 +35,7 @@ export default function AdminLogin() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-white border border-gray-200 rounded-xl p-8"
       >
-        <h1 className="text-xl font-bold text-center mb-6">EUDI Admin</h1>
+        <h1 className="text-xl font-bold text-center mb-6">Tracker Admin</h1>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}

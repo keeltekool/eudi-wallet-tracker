@@ -13,15 +13,96 @@ const THEMES: { value: string; label: string }[] = [
   { value: "eudi-wallet", label: "EUDI Wallet & eIDAS 2.0 Readiness" },
 ];
 
+const COMPETITOR_MAP: Record<string, string> = {
+  "docusign.com": "docusign",
+  "adobe.com": "adobe-sign",
+  "dropboxsign.com": "dropbox-sign",
+  "pandadoc.com": "pandadoc",
+  "namirial.com": "namirial",
+  "yousign.com": "yousign",
+  "universign.com": "universign",
+  "skribble.com": "skribble",
+  "sproof.io": "sproof",
+  "penneo.com": "penneo",
+  "scrive.com": "scrive",
+  "dokobit.com": "dokobit",
+  "signicat.com": "signicat",
+  "vismasign.fi": "visma-sign",
+  "contractbook.com": "scrive",
+};
+
+const THEME_HINTS: Record<string, string> = {
+  pricing: "pricing",
+  hinnoittelu: "pricing",
+  price: "pricing",
+  plans: "pricing",
+  feature: "features",
+  product: "features",
+  ominaisuudet: "features",
+  integration: "integrations",
+  integraatiot: "integrations",
+  connector: "integrations",
+  eid: "eid",
+  auth: "eid",
+  compliance: "compliance",
+  trust: "compliance",
+  security: "compliance",
+  tietoturva: "compliance",
+  blog: "market",
+  press: "market",
+  news: "market",
+  wallet: "eudi-wallet",
+  eudi: "eudi-wallet",
+  eidas: "eudi-wallet",
+};
+
+function detectFromUrl(rawUrl: string): { competitor: string; theme: string; purpose: string } | null {
+  try {
+    const parsed = new URL(rawUrl.trim());
+    const host = parsed.hostname.replace(/^www\./, "");
+    const path = parsed.pathname.toLowerCase();
+
+    const competitor = COMPETITOR_MAP[host] || host.split(".")[0];
+
+    let theme = "market";
+    for (const [hint, t] of Object.entries(THEME_HINTS)) {
+      if (path.includes(hint)) {
+        theme = t;
+        break;
+      }
+    }
+
+    const pathLabel = path.replace(/^\/|\/$/g, "").replace(/\//g, " › ") || "homepage";
+    const purpose = `${competitor} ${pathLabel}`;
+
+    return { competitor, theme, purpose };
+  } catch {
+    return null;
+  }
+}
+
 export function AllekirjoitusCreateForm() {
   const router = useRouter();
-  const [competitor, setCompetitor] = useState("");
   const [url, setUrl] = useState("");
-  const [theme, setTheme] = useState("pricing");
+  const [competitor, setCompetitor] = useState("");
+  const [theme, setTheme] = useState("market");
   const [purpose, setPurpose] = useState("");
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [detected, setDetected] = useState(false);
+
+  function handleUrlChange(value: string) {
+    setUrl(value);
+    setDetected(false);
+    const result = detectFromUrl(value);
+    if (result) {
+      setCompetitor(result.competitor);
+      setTheme(result.theme);
+      setPurpose(result.purpose);
+      setDetected(true);
+    }
+  }
 
   function isHttpsUrl(value: string): boolean {
     try {
@@ -35,16 +116,12 @@ export function AllekirjoitusCreateForm() {
     e.preventDefault();
     setError("");
 
-    if (!competitor.trim()) {
-      setError("Competitor is required.");
-      return;
-    }
     if (!isHttpsUrl(url)) {
       setError("URL must be a valid https:// URL.");
       return;
     }
-    if (!THEMES.some((t) => t.value === theme)) {
-      setError("Invalid theme.");
+    if (!competitor.trim()) {
+      setError("Competitor could not be detected. Please enter manually.");
       return;
     }
 
@@ -76,65 +153,77 @@ export function AllekirjoitusCreateForm() {
     <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Competitor
-        </label>
-        <input
-          type="text"
-          value={competitor}
-          onChange={(e) => setCompetitor(e.target.value)}
-          placeholder="e.g. scrive"
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          Free-form label grouping multiple URLs for the same competitor.
-        </p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
           URL
         </label>
         <input
           type="url"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => handleUrlChange(e.target.value)}
           placeholder="https://scrive.com/pricing"
           required
+          autoFocus
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm font-mono"
         />
-        <p className="mt-1 text-xs text-gray-500">Must be https://.</p>
+        <p className="mt-1 text-xs text-gray-500">
+          Paste a URL — competitor and theme are auto-detected.
+        </p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Theme
-        </label>
-        <select
-          value={theme}
-          onChange={(e) => setTheme(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
-        >
-          {THEMES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {detected && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700">
+          Detected: <strong>{competitor}</strong> · {THEMES.find((t) => t.value === theme)?.label || theme}
+        </div>
+      )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Purpose <span className="text-gray-400 font-normal">(optional)</span>
-        </label>
-        <input
-          type="text"
-          value={purpose}
-          onChange={(e) => setPurpose(e.target.value)}
-          placeholder="e.g. Scrive main pricing page"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
-        />
-      </div>
+      <details className="group" open={!detected && url.length > 0}>
+        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 transition-colors">
+          Override detected values
+        </summary>
+        <div className="mt-3 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Competitor
+            </label>
+            <input
+              type="text"
+              value={competitor}
+              onChange={(e) => setCompetitor(e.target.value)}
+              placeholder="e.g. scrive"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Theme
+            </label>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
+            >
+              {THEMES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Purpose <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder="e.g. Scrive main pricing page"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+      </details>
 
       <div className="flex items-center gap-2">
         <input

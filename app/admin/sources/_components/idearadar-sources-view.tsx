@@ -1,21 +1,22 @@
 import { getDbForProject } from "@/src/lib/db/connections";
-import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
-import { scrapeRuns } from "@/src/db/schema-allekirjoitus";
+import { sources as idearadarSources } from "@/src/db/schema-idearadar";
+import { scrapeRuns } from "@/src/db/schema-idearadar";
 import { desc } from "drizzle-orm";
-import { AllekirjoitusSourceTable } from "./allekirjoitus-source-table";
+import { IdearadarSourceTable } from "./idearadar-source-table";
 
-export async function AllekirjoitusSourcesView() {
-  const db = getDbForProject("allekirjoitus");
+export async function IdearadarSourcesView() {
+  const db = getDbForProject("idearadar");
 
   const [rows, lastRun] = await Promise.all([
-    db.select().from(allekirjoitusSources).orderBy(desc(allekirjoitusSources.lastScrapedAt)),
+    db.select().from(idearadarSources).orderBy(desc(idearadarSources.lastScrapedAt)),
     db.select().from(scrapeRuns).orderBy(desc(scrapeRuns.startedAt)).limit(1),
   ]);
 
   return (
-    <AllekirjoitusSourceTable
+    <IdearadarSourceTable
       sources={rows.map((s) => ({
         ...s,
+        config: s.config as Record<string, unknown> | null,
         lastScrapedAt: s.lastScrapedAt?.toISOString() ?? null,
         createdAt: s.createdAt?.toISOString() ?? null,
         updatedAt: s.updatedAt?.toISOString() ?? null,

@@ -2,17 +2,20 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as eudiSchema from "../../db/schema";
 import * as allekirjoitusSchema from "../../db/schema-allekirjoitus";
+import * as idearadarSchema from "../../db/schema-idearadar";
 
-export type ProjectId = "eudi" | "allekirjoitus";
+export type ProjectId = "eudi" | "allekirjoitus" | "idearadar";
 
 const ENV_VAR_BY_PROJECT: Record<ProjectId, string> = {
   eudi: "DATABASE_URL",
   allekirjoitus: "DATABASE_URL_ALLEKIRJOITUS",
+  idearadar: "DATABASE_URL_IDEARADAR",
 };
 
 const SCHEMA_BY_PROJECT = {
   eudi: eudiSchema,
   allekirjoitus: allekirjoitusSchema,
+  idearadar: idearadarSchema,
 } as const;
 
 export function getDbForProject(projectId: ProjectId) {
