@@ -3,19 +3,22 @@ import { drizzle } from "drizzle-orm/neon-http";
 import * as eudiSchema from "../../db/schema";
 import * as allekirjoitusSchema from "../../db/schema-allekirjoitus";
 import * as idearadarSchema from "../../db/schema-idearadar";
+import * as athlonSchema from "../../db/schema-athlon";
 
-export type ProjectId = "eudi" | "allekirjoitus" | "idearadar";
+export type ProjectId = "eudi" | "allekirjoitus" | "idearadar" | "athlon";
 
 const ENV_VAR_BY_PROJECT: Record<ProjectId, string> = {
   eudi: "DATABASE_URL",
   allekirjoitus: "DATABASE_URL_ALLEKIRJOITUS",
   idearadar: "DATABASE_URL_IDEARADAR",
+  athlon: "DATABASE_URL_ATHLON",
 };
 
 const SCHEMA_BY_PROJECT = {
   eudi: eudiSchema,
   allekirjoitus: allekirjoitusSchema,
   idearadar: idearadarSchema,
+  athlon: athlonSchema,
 } as const;
 
 export function getDbForProject(projectId: ProjectId) {

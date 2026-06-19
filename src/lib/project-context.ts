@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import type { ProjectId } from "./db/connections";
 
 const COOKIE_NAME = "selected_project_id";
-const KNOWN_PROJECTS: readonly ProjectId[] = ["eudi", "allekirjoitus", "idearadar"] as const;
+const KNOWN_PROJECTS: readonly ProjectId[] = ["eudi", "allekirjoitus", "idearadar", "athlon"] as const;
 const DEFAULT_PROJECT: ProjectId = "eudi";
 
 /**
