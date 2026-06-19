@@ -103,7 +103,12 @@ export function AthlonAdmin({
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Athlon — sportlased, tiimid & alad</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold">Athlon — sportlased, tiimid & alad</h1>
+            <a href="/admin/runs" className="text-sm font-medium text-gray-600 hover:text-gray-900 underline underline-offset-2 whitespace-nowrap">
+              Vaata jookse →
+            </a>
+          </div>
           <p className="text-sm text-gray-500 mt-1">
             {stats.athleteCount} sportlast · {stats.teamCount} tiimi · {sports.length} ala
             {lastRunDate && <> · viimane skann {new Date(lastRunDate).toLocaleDateString("et-EE")}</>}
