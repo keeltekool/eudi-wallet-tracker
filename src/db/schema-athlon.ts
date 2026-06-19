@@ -85,6 +85,8 @@ export const posts = pgTable(
     isOwnPost: boolean("is_own_post").default(true),
     imageUrl: text("image_url"),
     sourceCredit: text("source_credit").default("Facebook"),
+    sourceUrl: text("source_url"), // v1.1: clean original-FB-post URL
+    sourceDateLabel: text("source_date_label"), // v1.1: original FB posting date (display)
     scrapedAt: timestamp("scraped_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
