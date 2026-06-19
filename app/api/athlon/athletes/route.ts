@@ -10,6 +10,8 @@ import { athletes, sports } from "@/src/db/schema-athlon";
  */
 
 const SURFACE_TYPES = ["official_page", "public_profile"] as const;
+const KINDS = ["athlete", "team"] as const;
+type Kind = (typeof KINDS)[number];
 
 function slugify(s: string): string {
   return s
@@ -47,6 +49,7 @@ export async function GET() {
       id: athletes.id,
       name: athletes.name,
       slug: athletes.slug,
+      kind: athletes.kind,
       sportId: athletes.sportId,
       sportName: sports.name,
       fbUrl: athletes.fbUrl,
@@ -67,7 +70,9 @@ export async function POST(request: NextRequest) {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const fbUrl = typeof body?.fbUrl === "string" ? body.fbUrl.trim() : "";
   const sportId = Number(body?.sportId);
-  const surfaceType = body?.surfaceType;
+  const kind: Kind = KINDS.includes(body?.kind) ? body.kind : "athlete";
+  // Teams have no personal profile — always an official Page.
+  const surfaceType = kind === "team" ? "official_page" : body?.surfaceType;
 
   if (!name) return NextResponse.json({ error: "Nimi on kohustuslik" }, { status: 400 });
   if (!sportId) return NextResponse.json({ error: "Ala on kohustuslik" }, { status: 400 });
@@ -90,6 +95,7 @@ export async function POST(request: NextRequest) {
     .values({
       name,
       slug,
+      kind,
       sportId,
       fbUrl,
       surfaceType,
@@ -112,6 +118,10 @@ export async function PATCH(request: NextRequest) {
   if (typeof body.bio === "string") patch.bio = body.bio.trim() || null;
   if (typeof body.active === "boolean") patch.active = body.active;
   if (typeof body.verified === "boolean") patch.verified = body.verified;
+  if (KINDS.includes(body.kind)) {
+    patch.kind = body.kind;
+    if (body.kind === "team") patch.surfaceType = "official_page"; // teams = official Page only
+  }
   if (Number(body.sportId)) patch.sportId = Number(body.sportId);
   if (SURFACE_TYPES.includes(body.surfaceType)) patch.surfaceType = body.surfaceType;
   if (typeof body.fbUrl === "string" && body.fbUrl.trim()) {

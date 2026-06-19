@@ -17,6 +17,7 @@ export async function AthlonAdminView() {
         id: athletes.id,
         name: athletes.name,
         slug: athletes.slug,
+        kind: athletes.kind,
         sportId: athletes.sportId,
         sportName: sports.name,
         fbUrl: athletes.fbUrl,

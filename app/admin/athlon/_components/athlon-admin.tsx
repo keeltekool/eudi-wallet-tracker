@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type Kind = "athlete" | "team";
 type Athlete = {
   id: number;
   name: string;
   slug: string;
+  kind: Kind;
   sportId: number;
   sportName: string;
   fbUrl: string;
@@ -33,6 +35,7 @@ export function AthlonAdmin({
   // add-athlete form
   const [name, setName] = useState("");
   const [fbUrl, setFbUrl] = useState("");
+  const [kind, setKind] = useState<Kind>("athlete");
   const [sportId, setSportId] = useState<number>(sports[0]?.id ?? 0);
   const [surfaceType, setSurfaceType] = useState<"official_page" | "public_profile">("official_page");
 
@@ -42,7 +45,15 @@ export function AthlonAdmin({
   const stats = useMemo(() => {
     const active = athletes.filter((a) => a.active).length;
     const verified = athletes.filter((a) => a.verified).length;
-    return { total: athletes.length, active, verified, sports: sports.length };
+    const teamCount = athletes.filter((a) => a.kind === "team").length;
+    return {
+      total: athletes.length,
+      active,
+      verified,
+      sports: sports.length,
+      teamCount,
+      athleteCount: athletes.length - teamCount,
+    };
   }, [athletes, sports]);
 
   async function call(url: string, method: string, body: unknown) {
@@ -65,7 +76,7 @@ export function AthlonAdmin({
 
   async function addAthlete(e: React.FormEvent) {
     e.preventDefault();
-    const ok = await call("/api/athlon/athletes", "POST", { name, fbUrl, sportId, surfaceType });
+    const ok = await call("/api/athlon/athletes", "POST", { name, fbUrl, kind, sportId, surfaceType });
     if (ok) {
       setName("");
       setFbUrl("");
@@ -92,9 +103,9 @@ export function AthlonAdmin({
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Athlon — sportlased & alad</h1>
+          <h1 className="text-2xl font-bold">Athlon — sportlased, tiimid & alad</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {athletes.length} sportlast · {sports.length} ala
+            {stats.athleteCount} sportlast · {stats.teamCount} tiimi · {sports.length} ala
             {lastRunDate && <> · viimane skann {new Date(lastRunDate).toLocaleDateString("et-EE")}</>}
           </p>
         </div>
@@ -119,10 +130,15 @@ export function AthlonAdmin({
           ))}
         </div>
 
-        {/* Add athlete */}
+        {/* Add athlete / team */}
         <form onSubmit={addAthlete} className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-          <h2 className="font-semibold mb-3 text-sm text-gray-700">Lisa sportlane</h2>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-2.5">
+          <h2 className="font-semibold mb-3 text-sm text-gray-700">Lisa sportlane või tiim</h2>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-2.5">
+            <select value={kind} onChange={(e) => setKind(e.target.value as Kind)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white" aria-label="Tüüp">
+              <option value="athlete">Sportlane</option>
+              <option value="team">Tiim</option>
+            </select>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nimi"
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm" required />
             <input value={fbUrl} onChange={(e) => setFbUrl(e.target.value)} placeholder="https://facebook.com/..."
@@ -131,17 +147,20 @@ export function AthlonAdmin({
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
               {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <select value={surfaceType} onChange={(e) => setSurfaceType(e.target.value as typeof surfaceType)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <select value={kind === "team" ? "official_page" : surfaceType} disabled={kind === "team"}
+              onChange={(e) => setSurfaceType(e.target.value as typeof surfaceType)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400">
               <option value="official_page">Ametlik leht</option>
               <option value="public_profile">Avalik profiil</option>
             </select>
           </div>
           <button type="submit" disabled={busy}
             className="mt-3 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50">
-            Lisa sportlane
+            {kind === "team" ? "Lisa tiim" : "Lisa sportlane"}
           </button>
-          <span className="ml-3 text-xs text-gray-400">Fännilehed lükatakse tagasi.</span>
+          <span className="ml-3 text-xs text-gray-400">
+            Fännilehed lükatakse tagasi. Tiimid = ainult ametlik leht.
+          </span>
         </form>
 
         {/* Athletes table */}
@@ -150,6 +169,7 @@ export function AthlonAdmin({
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Nimi</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">Tüüp</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Ala</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Pinnatüüp</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Facebook</th>
@@ -161,7 +181,21 @@ export function AthlonAdmin({
             <tbody>
               {athletes.map((a) => (
                 <tr key={a.id} className={`border-b border-gray-100 last:border-0 ${!a.active ? "opacity-50" : ""}`}>
-                  <td className="px-4 py-2.5 font-medium text-gray-900">{a.name}</td>
+                  <td className="px-4 py-2.5 font-medium text-gray-900">
+                    {a.name}
+                    {a.kind === "team" && (
+                      <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                        Tiim
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <select value={a.kind} onChange={(e) => patchAthlete(a.id, { kind: e.target.value })}
+                      className="px-2 py-1 border border-gray-200 rounded text-xs bg-white">
+                      <option value="athlete">Sportlane</option>
+                      <option value="team">Tiim</option>
+                    </select>
+                  </td>
                   <td className="px-4 py-2.5">
                     <select value={a.sportId} onChange={(e) => patchAthlete(a.id, { sportId: Number(e.target.value) })}
                       className="px-2 py-1 border border-gray-200 rounded text-xs bg-white">

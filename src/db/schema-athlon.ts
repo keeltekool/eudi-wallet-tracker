@@ -16,6 +16,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
+export const entityKindEnum = pgEnum("entity_kind", ["athlete", "team"]);
 export const surfaceTypeEnum = pgEnum("surface_type", ["official_page", "public_profile"]);
 export const postTypeEnum = pgEnum("post_type", ["status", "photo", "album", "link_share"]);
 export const postedAtConfidenceEnum = pgEnum("posted_at_confidence", [
@@ -44,6 +45,7 @@ export const athletes = pgTable("athletes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  kind: entityKindEnum("kind").notNull().default("athlete"),
   sportId: integer("sport_id")
     .notNull()
     .references(() => sports.id),
