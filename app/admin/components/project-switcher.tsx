@@ -9,6 +9,7 @@ const OPTIONS = [
   { value: "eudi", label: "EUDI Wallet Tracker" },
   { value: "allekirjoitus", label: "Allekirjoitus Competitive Intel" },
   { value: "idearadar", label: "Idea Radar" },
+  { value: "athlon", label: "Athlon" },
 ] as const;
 
 type Value = (typeof OPTIONS)[number]["value"];
@@ -32,7 +33,12 @@ export function ProjectSwitcher() {
 
   useEffect(() => {
     const cookieVal = readCookie(COOKIE_NAME);
-    if (cookieVal === "eudi" || cookieVal === "allekirjoitus" || cookieVal === "idearadar") {
+    if (
+      cookieVal === "eudi" ||
+      cookieVal === "allekirjoitus" ||
+      cookieVal === "idearadar" ||
+      cookieVal === "athlon"
+    ) {
       setValue(cookieVal);
     }
   }, []);
