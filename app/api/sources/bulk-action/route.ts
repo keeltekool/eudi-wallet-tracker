@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db/client";
 import { sources } from "@/src/db/schema";
 import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
+import { sources as eewatchSources } from "@/src/db/schema-eewatch";
 import { getDbForProject } from "@/src/lib/db/connections";
 import { inArray, eq } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
 
 type Action = "delete" | "pause" | "resume" | "reanalyze";
 
-function resolveProject(request: NextRequest, body: Record<string, unknown>): "eudi" | "allekirjoitus" {
+function resolveProject(
+  request: NextRequest,
+  body: Record<string, unknown>,
+): "eudi" | "allekirjoitus" | "eewatch" {
   const fromQuery = request.nextUrl.searchParams.get("project");
-  if (fromQuery === "allekirjoitus") return "allekirjoitus";
-  if (body.project === "allekirjoitus") return "allekirjoitus";
+  if (fromQuery === "allekirjoitus" || body.project === "allekirjoitus") return "allekirjoitus";
+  if (fromQuery === "eewatch" || body.project === "eewatch") return "eewatch";
   return "eudi";
 }
 
@@ -24,21 +28,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No IDs provided" }, { status: 400 });
   }
 
-  if (project === "allekirjoitus") {
-    const aDb = getDbForProject("allekirjoitus");
+  if (project === "allekirjoitus" || project === "eewatch") {
+    const pDb = getDbForProject(project);
+    const table = project === "eewatch" ? eewatchSources : allekirjoitusSources;
 
     if (action === "delete") {
-      await aDb.delete(allekirjoitusSources).where(inArray(allekirjoitusSources.id, ids));
+      await pDb.delete(table).where(inArray(table.id, ids));
       return NextResponse.json({ ok: true, action, count: ids.length });
     }
 
     if (action === "pause") {
-      await aDb.update(allekirjoitusSources).set({ active: false }).where(inArray(allekirjoitusSources.id, ids));
+      await pDb.update(table).set({ active: false }).where(inArray(table.id, ids));
       return NextResponse.json({ ok: true, action, count: ids.length });
     }
 
     if (action === "resume") {
-      await aDb.update(allekirjoitusSources).set({ active: true }).where(inArray(allekirjoitusSources.id, ids));
+      await pDb.update(table).set({ active: true }).where(inArray(table.id, ids));
       return NextResponse.json({ ok: true, action, count: ids.length });
     }
 

@@ -54,6 +54,11 @@ vi.mock("@/src/db/schema-allekirjoitus", () => ({
   sources: { __brand: "allekirjoitusSources" },
 }));
 
+vi.mock("@/src/db/schema-eewatch", () => ({
+  sources: { __brand: "eewatchSources" },
+  EEWATCH_THEMES: ["home", "services", "pricing", "blog", "about", "other"],
+}));
+
 vi.mock("@/src/lib/db/connections", () => ({
   getDbForProject: vi.fn(() => ({
     insert: (table: unknown) => allekirjoitusInsert(table),
@@ -145,6 +150,36 @@ describe("POST /api/sources", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toMatch(/https/);
+    expect(allekirjoitusInsert).not.toHaveBeenCalled();
+  });
+
+  it("routes project=eewatch to the EE Watch DB with its own theme list", async () => {
+    const req = buildRequest({
+      project: "eewatch",
+      competitor: "kasulik-ai",
+      url: "https://kasulik.ai/",
+      theme: "home",
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(201);
+    expect(allekirjoitusInsert).toHaveBeenCalledOnce();
+    expect(allekirjoitusInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ __brand: "eewatchSources" }),
+    );
+    expect(eudiInsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects eewatch payload with an allekirjoitus-only theme", async () => {
+    const req = buildRequest({
+      project: "eewatch",
+      competitor: "kasulik-ai",
+      url: "https://kasulik.ai/",
+      theme: "eudi-wallet",
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/theme/);
     expect(allekirjoitusInsert).not.toHaveBeenCalled();
   });
 

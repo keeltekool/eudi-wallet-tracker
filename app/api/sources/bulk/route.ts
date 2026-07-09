@@ -3,6 +3,7 @@ import { db } from "@/src/db/client";
 import { sources } from "@/src/db/schema";
 import { getDbForProject } from "@/src/lib/db/connections";
 import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
+import { sources as eewatchSources, EEWATCH_THEMES } from "@/src/db/schema-eewatch";
 
 const VALID_TYPES = ["rss", "css"];
 const VALID_CATEGORIES = [
@@ -110,6 +111,7 @@ function validateEntry(entry: unknown, index: number): ValidationResult {
 function validateAllekirjoitusEntry(
   entry: unknown,
   index: number,
+  themes: readonly string[] = ALLEKIRJOITUS_THEMES,
 ): AllekirjoitusValidationResult {
   const e = entry as AllekirjoitusEntry;
 
@@ -153,7 +155,7 @@ function validateAllekirjoitusEntry(
   if (!e.theme || typeof e.theme !== "string") {
     return { entry: e, index, status: "invalid", reason: "Missing theme" };
   }
-  if (!ALLEKIRJOITUS_THEMES.includes(e.theme)) {
+  if (!themes.includes(e.theme)) {
     return {
       entry: e,
       index,
@@ -172,7 +174,7 @@ export async function POST(request: NextRequest) {
   const { entries, action, project = "eudi" } = body as {
     entries: unknown[];
     action: "preview" | "import";
-    project?: "eudi" | "allekirjoitus";
+    project?: "eudi" | "allekirjoitus" | "eewatch";
   };
 
   if (!Array.isArray(entries) || entries.length === 0) {
@@ -265,19 +267,21 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (project === "allekirjoitus") {
-    const allekirjoitusDb = getDbForProject("allekirjoitus");
+  if (project === "allekirjoitus" || project === "eewatch") {
+    const allekirjoitusDb = getDbForProject(project);
+    const table = project === "eewatch" ? eewatchSources : allekirjoitusSources;
+    const themes = project === "eewatch" ? EEWATCH_THEMES : ALLEKIRJOITUS_THEMES;
 
     const results: AllekirjoitusValidationResult[] = entries.map((e, i) =>
-      validateAllekirjoitusEntry(e, i),
+      validateAllekirjoitusEntry(e, i, themes),
     );
 
     const existingRows = await allekirjoitusDb
       .select({
-        url: allekirjoitusSources.url,
-        competitor: allekirjoitusSources.competitor,
+        url: table.url,
+        competitor: table.competitor,
       })
-      .from(allekirjoitusSources);
+      .from(table);
 
     const existingUrls = new Map(
       existingRows.map((s) => [normalizeUrl(s.url), s.competitor]),
@@ -322,7 +326,7 @@ export async function POST(request: NextRequest) {
 
     for (const result of toInsert) {
       const e = result.entry;
-      await allekirjoitusDb.insert(allekirjoitusSources).values({
+      await allekirjoitusDb.insert(table).values({
         competitor: e.competitor.trim(),
         url: e.url.trim(),
         theme: e.theme,

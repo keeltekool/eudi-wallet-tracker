@@ -16,5 +16,9 @@ export default async function RunsPage() {
     return <AthlonRunsView />;
   }
 
+  if (projectId === "eewatch") {
+    return <AllekirjoitusRunsView project="eewatch" />;
+  }
+
   return <AllekirjoitusRunsView />;
 }

@@ -23,6 +23,8 @@ type Status = "active" | "changed" | "failed" | "pending";
 type Props = {
   sources: Source[];
   lastRunDate: string | null;
+  /** Which federated project the rows belong to. Defaults to allekirjoitus. */
+  project?: "allekirjoitus" | "eewatch";
 };
 
 const THEME_BADGE: Record<string, string> = {
@@ -33,6 +35,12 @@ const THEME_BADGE: Record<string, string> = {
   compliance: "bg-amber-50 text-amber-700",
   market: "bg-sky-50 text-sky-700",
   "eudi-wallet": "bg-violet-50 text-violet-700",
+  // EE AI Builders Watch page types
+  home: "bg-blue-50 text-blue-700",
+  services: "bg-indigo-50 text-indigo-700",
+  blog: "bg-sky-50 text-sky-700",
+  about: "bg-amber-50 text-amber-700",
+  other: "bg-gray-100 text-gray-600",
 };
 
 const STATUS_BADGE: Record<Status, string> = {
@@ -64,7 +72,7 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export function AllekirjoitusSourceTable({ sources, lastRunDate }: Props) {
+export function AllekirjoitusSourceTable({ sources, lastRunDate, project = "allekirjoitus" }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -131,7 +139,7 @@ export function AllekirjoitusSourceTable({ sources, lastRunDate }: Props) {
     await fetch("/api/sources/bulk-action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [...selected], action, project: "allekirjoitus" }),
+      body: JSON.stringify({ ids: [...selected], action, project }),
     });
     setSelected(new Set());
     setActionLoading(false);

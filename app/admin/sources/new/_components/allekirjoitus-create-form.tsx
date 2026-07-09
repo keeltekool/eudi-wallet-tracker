@@ -3,15 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const THEMES: { value: string; label: string }[] = [
-  { value: "pricing", label: "Pricing & Packaging" },
-  { value: "features", label: "Features & Product" },
-  { value: "integrations", label: "Integrations" },
-  { value: "eid", label: "eID & Auth" },
-  { value: "compliance", label: "Compliance & Trust" },
-  { value: "market", label: "Market Signals" },
-  { value: "eudi-wallet", label: "EUDI Wallet & eIDAS 2.0 Readiness" },
-];
+type FormProject = "allekirjoitus" | "eewatch";
+
+const THEMES_BY_PROJECT: Record<FormProject, { value: string; label: string }[]> = {
+  allekirjoitus: [
+    { value: "pricing", label: "Pricing & Packaging" },
+    { value: "features", label: "Features & Product" },
+    { value: "integrations", label: "Integrations" },
+    { value: "eid", label: "eID & Auth" },
+    { value: "compliance", label: "Compliance & Trust" },
+    { value: "market", label: "Market Signals" },
+    { value: "eudi-wallet", label: "EUDI Wallet & eIDAS 2.0 Readiness" },
+  ],
+  eewatch: [
+    { value: "home", label: "Homepage" },
+    { value: "services", label: "Services / Courses" },
+    { value: "pricing", label: "Pricing" },
+    { value: "blog", label: "Blog / News" },
+    { value: "about", label: "About / Team" },
+    { value: "other", label: "Other" },
+  ],
+};
 
 const COMPETITOR_MAP: Record<string, string> = {
   "docusign.com": "docusign",
@@ -31,41 +43,77 @@ const COMPETITOR_MAP: Record<string, string> = {
   "contractbook.com": "scrive",
 };
 
-const THEME_HINTS: Record<string, string> = {
-  pricing: "pricing",
-  hinnoittelu: "pricing",
-  price: "pricing",
-  plans: "pricing",
-  feature: "features",
-  product: "features",
-  ominaisuudet: "features",
-  integration: "integrations",
-  integraatiot: "integrations",
-  connector: "integrations",
-  eid: "eid",
-  auth: "eid",
-  compliance: "compliance",
-  trust: "compliance",
-  security: "compliance",
-  tietoturva: "compliance",
-  blog: "market",
-  press: "market",
-  news: "market",
-  wallet: "eudi-wallet",
-  eudi: "eudi-wallet",
-  eidas: "eudi-wallet",
+const THEME_HINTS_BY_PROJECT: Record<FormProject, Record<string, string>> = {
+  allekirjoitus: {
+    pricing: "pricing",
+    hinnoittelu: "pricing",
+    price: "pricing",
+    plans: "pricing",
+    feature: "features",
+    product: "features",
+    ominaisuudet: "features",
+    integration: "integrations",
+    integraatiot: "integrations",
+    connector: "integrations",
+    eid: "eid",
+    auth: "eid",
+    compliance: "compliance",
+    trust: "compliance",
+    security: "compliance",
+    tietoturva: "compliance",
+    blog: "market",
+    press: "market",
+    news: "market",
+    wallet: "eudi-wallet",
+    eudi: "eudi-wallet",
+    eidas: "eudi-wallet",
+  },
+  eewatch: {
+    koolitus: "services",
+    kursus: "services",
+    teenus: "services",
+    service: "services",
+    advisory: "services",
+    hinnad: "pricing",
+    hind: "pricing",
+    pricing: "pricing",
+    blog: "blog",
+    blogi: "blog",
+    uudised: "blog",
+    news: "blog",
+    post: "blog",
+    meist: "about",
+    minust: "about",
+    kontakt: "about",
+    about: "about",
+    tiim: "about",
+  },
 };
 
-function detectFromUrl(rawUrl: string): { competitor: string; theme: string; purpose: string } | null {
+const DEFAULT_THEME: Record<FormProject, string> = {
+  allekirjoitus: "market",
+  eewatch: "other",
+};
+
+function detectFromUrl(
+  rawUrl: string,
+  project: FormProject,
+): { competitor: string; theme: string; purpose: string } | null {
   try {
     const parsed = new URL(rawUrl.trim());
     const host = parsed.hostname.replace(/^www\./, "");
     const path = parsed.pathname.toLowerCase();
 
-    const competitor = COMPETITOR_MAP[host] || host.split(".")[0];
+    const competitor =
+      project === "eewatch"
+        ? host.split(".")[0]
+        : COMPETITOR_MAP[host] || host.split(".")[0];
 
-    let theme = "market";
-    for (const [hint, t] of Object.entries(THEME_HINTS)) {
+    let theme =
+      project === "eewatch" && (path === "/" || path === "")
+        ? "home"
+        : DEFAULT_THEME[project];
+    for (const [hint, t] of Object.entries(THEME_HINTS_BY_PROJECT[project])) {
       if (path.includes(hint)) {
         theme = t;
         break;
@@ -81,11 +129,16 @@ function detectFromUrl(rawUrl: string): { competitor: string; theme: string; pur
   }
 }
 
-export function AllekirjoitusCreateForm() {
+export function AllekirjoitusCreateForm({
+  project = "allekirjoitus",
+}: {
+  project?: FormProject;
+}) {
+  const THEMES = THEMES_BY_PROJECT[project];
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [competitor, setCompetitor] = useState("");
-  const [theme, setTheme] = useState("market");
+  const [theme, setTheme] = useState(DEFAULT_THEME[project]);
   const [purpose, setPurpose] = useState("");
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -95,7 +148,7 @@ export function AllekirjoitusCreateForm() {
   function handleUrlChange(value: string) {
     setUrl(value);
     setDetected(false);
-    const result = detectFromUrl(value);
+    const result = detectFromUrl(value, project);
     if (result) {
       setCompetitor(result.competitor);
       setTheme(result.theme);
@@ -130,7 +183,7 @@ export function AllekirjoitusCreateForm() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        project: "allekirjoitus",
+        project,
         competitor: competitor.trim(),
         url: url.trim(),
         theme,

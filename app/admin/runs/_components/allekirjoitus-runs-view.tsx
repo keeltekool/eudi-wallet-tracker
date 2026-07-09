@@ -14,8 +14,13 @@ function truncateId(id: string | null, max = 10): string {
   return id.slice(0, max) + "…";
 }
 
-export async function AllekirjoitusRunsView() {
-  const db = getDbForProject("allekirjoitus");
+export async function AllekirjoitusRunsView({
+  project = "allekirjoitus",
+}: {
+  /** Also serves eewatch — its scrape_runs is a superset of the same columns. */
+  project?: "allekirjoitus" | "eewatch";
+}) {
+  const db = getDbForProject(project);
   const runs = await db
     .select()
     .from(scrapeRuns)
@@ -34,7 +39,11 @@ export async function AllekirjoitusRunsView() {
         <h1 className="text-2xl font-bold mt-4 mb-6">Scrape Runs</h1>
 
         {runs.length === 0 ? (
-          <p className="text-gray-500">No Allekirjoitus scans yet.</p>
+          <p className="text-gray-500">
+            {project === "eewatch"
+              ? "No EE AI Builders Watch scans yet."
+              : "No Allekirjoitus scans yet."}
+          </p>
         ) : (
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
             <table className="w-full text-sm">

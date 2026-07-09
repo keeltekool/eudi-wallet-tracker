@@ -21,7 +21,9 @@ export default async function NewSourcePage() {
         {projectId === "eudi" ? (
           <EudiCreateSourceView />
         ) : (
-          <AllekirjoitusCreateForm />
+          <AllekirjoitusCreateForm
+            project={projectId === "eewatch" ? "eewatch" : "allekirjoitus"}
+          />
         )}
       </div>
     </div>

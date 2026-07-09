@@ -3,6 +3,7 @@ import { EudiSourcesView } from "./sources/_components/eudi-sources-view";
 import { AllekirjoitusSourcesView } from "./sources/_components/allekirjoitus-sources-view";
 import { IdearadarSourcesView } from "./sources/_components/idearadar-sources-view";
 import { AthlonAdminView } from "./athlon/_components/athlon-admin-view";
+import { EewatchSourcesView } from "./sources/_components/eewatch-sources-view";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,10 @@ export default async function AdminPage() {
 
   if (projectId === "athlon") {
     return <AthlonAdminView />;
+  }
+
+  if (projectId === "eewatch") {
+    return <EewatchSourcesView />;
   }
 
   return <AllekirjoitusSourcesView />;

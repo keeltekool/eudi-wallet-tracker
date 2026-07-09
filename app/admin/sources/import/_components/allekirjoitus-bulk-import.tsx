@@ -72,17 +72,46 @@ const THEME_HINTS: Record<string, string> = {
   eidas: "eudi-wallet",
 };
 
-function detectFromUrl(rawUrl: string): BulkEntry | null {
+type ImportProject = "allekirjoitus" | "eewatch";
+
+const EEWATCH_THEME_HINTS: Record<string, string> = {
+  koolitus: "services",
+  kursus: "services",
+  teenus: "services",
+  service: "services",
+  advisory: "services",
+  hinnad: "pricing",
+  hind: "pricing",
+  pricing: "pricing",
+  blog: "blog",
+  blogi: "blog",
+  uudised: "blog",
+  news: "blog",
+  post: "blog",
+  meist: "about",
+  minust: "about",
+  kontakt: "about",
+  about: "about",
+  tiim: "about",
+};
+
+function detectFromUrl(rawUrl: string, project: ImportProject): BulkEntry | null {
   try {
     const url = new URL(rawUrl.trim());
     const host = url.hostname.replace(/^www\./, "");
     const path = url.pathname.toLowerCase();
 
-    const mapped = COMPETITOR_MAP[host];
+    const mapped = project === "eewatch" ? undefined : COMPETITOR_MAP[host];
     const competitor = mapped?.competitor || host.split(".")[0];
 
-    let theme = mapped?.defaultTheme || "market";
-    for (const [hint, t] of Object.entries(THEME_HINTS)) {
+    const hints = project === "eewatch" ? EEWATCH_THEME_HINTS : THEME_HINTS;
+    let theme =
+      project === "eewatch"
+        ? path === "/" || path === ""
+          ? "home"
+          : "other"
+        : mapped?.defaultTheme || "market";
+    for (const [hint, t] of Object.entries(hints)) {
       if (path.includes(hint)) {
         theme = t;
         break;
@@ -100,7 +129,7 @@ function detectFromUrl(rawUrl: string): BulkEntry | null {
 
 const HEADER_FIELDS = ["competitor", "url", "theme", "purpose"];
 
-function parseInput(input: string): BulkEntry[] {
+function parseInput(input: string, project: ImportProject): BulkEntry[] {
   const rows = input
     .split(/\r?\n/)
     .map((r) => r.trim())
@@ -128,7 +157,7 @@ function parseInput(input: string): BulkEntry[] {
 
   const entries: BulkEntry[] = [];
   for (const row of rows) {
-    const detected = detectFromUrl(row);
+    const detected = detectFromUrl(row, project);
     if (detected) {
       entries.push(detected);
     } else {
@@ -144,7 +173,11 @@ https://www.adobe.com/sign/pricing/plans.html
 https://yousign.com/pricing
 https://yousign.com/blog`;
 
-export function AllekirjoitusBulkImport() {
+export function AllekirjoitusBulkImport({
+  project = "allekirjoitus",
+}: {
+  project?: ImportProject;
+}) {
   const router = useRouter();
   const [text, setText] = useState("");
   const [previewing, setPreviewing] = useState(false);
@@ -159,7 +192,7 @@ export function AllekirjoitusBulkImport() {
     setPreview(null);
     setImportDone(false);
 
-    const entries = parseInput(text);
+    const entries = parseInput(text, project);
     if (entries.length === 0) {
       setError("No rows parsed. Paste at least one URL.");
       setPreviewing(false);
@@ -170,7 +203,7 @@ export function AllekirjoitusBulkImport() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        project: "allekirjoitus",
+        project,
         entries,
         action: "preview",
       }),
@@ -188,13 +221,13 @@ export function AllekirjoitusBulkImport() {
   async function handleImport() {
     if (!preview) return;
     setImporting(true);
-    const entries = parseInput(text);
+    const entries = parseInput(text, project);
 
     const res = await fetch("/api/sources/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        project: "allekirjoitus",
+        project,
         entries,
         action: "import",
       }),

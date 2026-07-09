@@ -21,7 +21,9 @@ export default async function ImportSourcesPage() {
         {projectId === "eudi" ? (
           <EudiBulkImportView />
         ) : (
-          <AllekirjoitusBulkImport />
+          <AllekirjoitusBulkImport
+            project={projectId === "eewatch" ? "eewatch" : "allekirjoitus"}
+          />
         )}
       </div>
     </div>

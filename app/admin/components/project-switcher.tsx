@@ -10,6 +10,7 @@ const OPTIONS = [
   { value: "allekirjoitus", label: "Allekirjoitus Competitive Intel" },
   { value: "idearadar", label: "Idea Radar" },
   { value: "athlon", label: "Athlon" },
+  { value: "eewatch", label: "EE AI Builders Watch" },
 ] as const;
 
 type Value = (typeof OPTIONS)[number]["value"];
@@ -37,7 +38,8 @@ export function ProjectSwitcher() {
       cookieVal === "eudi" ||
       cookieVal === "allekirjoitus" ||
       cookieVal === "idearadar" ||
-      cookieVal === "athlon"
+      cookieVal === "athlon" ||
+      cookieVal === "eewatch"
     ) {
       setValue(cookieVal);
     }

@@ -3,6 +3,7 @@ import { db } from "@/src/db/client";
 import { sources } from "@/src/db/schema";
 import { getDbForProject } from "@/src/lib/db/connections";
 import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
+import { sources as eewatchSources, EEWATCH_THEMES } from "@/src/db/schema-eewatch";
 
 const ALLEKIRJOITUS_THEMES = [
   "pricing",
@@ -22,7 +23,10 @@ type AllekirjoitusBody = {
   active?: unknown;
 };
 
-function validateAllekirjoitusPayload(body: AllekirjoitusBody):
+function validateAllekirjoitusPayload(
+  body: AllekirjoitusBody,
+  themes: readonly string[] = ALLEKIRJOITUS_THEMES,
+):
   | { ok: true; value: { competitor: string; url: string; theme: string; purpose: string | null; active: boolean } }
   | { ok: false; error: string } {
   if (!body.competitor || typeof body.competitor !== "string" || !body.competitor.trim()) {
@@ -43,10 +47,10 @@ function validateAllekirjoitusPayload(body: AllekirjoitusBody):
   if (!body.theme || typeof body.theme !== "string") {
     return { ok: false, error: "theme is required" };
   }
-  if (!ALLEKIRJOITUS_THEMES.includes(body.theme as typeof ALLEKIRJOITUS_THEMES[number])) {
+  if (!themes.includes(body.theme)) {
     return {
       ok: false,
-      error: `theme must be one of: ${ALLEKIRJOITUS_THEMES.join(", ")}`,
+      error: `theme must be one of: ${themes.join(", ")}`,
     };
   }
   const purpose =
@@ -95,6 +99,20 @@ export async function POST(request: NextRequest) {
     const allekirjoitusDb = getDbForProject("allekirjoitus");
     const [created] = await allekirjoitusDb
       .insert(allekirjoitusSources)
+      .values(validated.value)
+      .returning();
+
+    return NextResponse.json(created, { status: 201 });
+  }
+
+  if (project === "eewatch") {
+    const validated = validateAllekirjoitusPayload(body, EEWATCH_THEMES);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const eewatchDb = getDbForProject("eewatch");
+    const [created] = await eewatchDb
+      .insert(eewatchSources)
       .values(validated.value)
       .returning();
 
