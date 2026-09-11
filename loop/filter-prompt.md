@@ -61,6 +61,10 @@ For each article, look at the title and excerpt. Ask: "Does this touch EU digita
 - Post-quantum cryptography for digital signatures or trust services
 - European Business Wallet, corporate identity wallet
 - Any QTSP or signing infrastructure vendor (Buypass, primesign, Swisscom, A-Trust, Evrotrust, Zetes, Ascertia, Intesi Group, Certum, etc.)
+- QTSP market moves: acquisitions, mergers, new signing/sealing products, wallet gateway launches, managed identity+signing hubs
+- Signing/sealing pricing, business models, free QES implementations and commercial impact
+- National wallet signing procurements (which QTSP won, contract values, signing scope within wallet tenders)
+- Wallet-integrated signing flows and signing UX developments
 
 **Mark as `irrelevant` if:**
 - General cybersecurity news with no wallet/identity connection

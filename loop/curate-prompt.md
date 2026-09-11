@@ -19,8 +19,8 @@ Outputs JSON. If `count` is 0, log "Nothing to process" and stop.
 ## Step 2: Score and Curate — BE STRICT
 
 **Relevance Score (1-10):**
-- 9-10: EXPLICITLY about EUDI Wallet, eIDAS 2.0 regulation, ARF releases, EUDI pilot programs, national wallet implementations, EUDI Wallet use cases, OR about qualified signing/sealing infrastructure (CSC API, QSCD/QSealCD, remote signing, qualified electronic signatures/seals, EN 419241, post-quantum crypto for trust services, QTSP certification under CIR 2025/1567) in an EU/eIDAS context
-- 7-8: About verifiable credentials / OpenID4VP / OID4VCI / wallet protocols IN THE EU CONTEXT with clear EUDI connection, OR about HSM/PKI/certificate management vendors (Thales, Utimaco, Cryptomathic, Buypass, primesign, etc.) with relevance to EU trust services
+- 9-10: EXPLICITLY about EUDI Wallet, eIDAS 2.0 regulation, ARF releases, EUDI pilot programs, national wallet implementations, EUDI Wallet use cases, OR about qualified signing/sealing in EU context: QTSP competitive moves, signing/sealing service launches, wallet QES procurements, free QES implementations, CSC API, QSCD certifications, QTSP eIDAS 2.0 certifications, market consolidation (QTSP acquisitions/mergers), wallet gateway launches, signing pricing/business models, European Business Wallet signing/sealing
+- 7-8: About verifiable credentials / OpenID4VP / OID4VCI / wallet protocols IN THE EU CONTEXT with clear EUDI connection, OR about HSM/PKI/certificate management vendors with relevance to EU trust services, OR about PQC migration for digital signatures
 - 5-6: Generally about digital identity, trust services, or wallets but does NOT specifically mention EUDI, eIDAS, or EU wallet regulation
 - 1-4: Not about EUDI Wallet at all
 
@@ -46,10 +46,12 @@ Outputs JSON. If `count` is 0, log "Nothing to process" and stop.
 - Companies building EUDI Wallet infrastructure (with specific EUDI context)
 - Analysis of EUDI Wallet adoption, risks, market impact
 - Cross-border identity interoperability in EU context
-- Qualified signing/sealing service developments: CSC API implementations, QSCD certifications, remote signing provider moves, QTSP eIDAS 2.0 certifications (CIR 2025/1567)
-- QSCD/HSM vendor news relevant to EU trust services (Thales, Utimaco, Cryptomathic, Futurex, Securosys)
-- Post-quantum cryptography developments for digital signatures/seals in EU context
-- European Business Wallet developments (signing, sealing, corporate identity)
+- Qualified signing/sealing market developments: QTSP competitive moves (acquisitions, partnerships, new products, wallet gateway launches), remote signing provider positioning, eIDAS 2.0 QTSP certifications (CIR 2025/1567), CSC API implementations
+- National signing infrastructure decisions: which QTSP won a wallet QES contract, free QES implementations and caps, signing procurement tenders, national trust service regulatory decisions
+- Signing/sealing business intelligence: pricing models, market consolidation (QTSP mergers/acquisitions like Signicat/Dokobit), wallet gateway market (Worldline, Signicat, Namirial competing for RP integration), managed signing hubs bundling identity + signing
+- QSCD/HSM vendor developments relevant to EU trust services (Thales, Utimaco, Cryptomathic, Futurex, Securosys) — certifications, PQC readiness, new products
+- Post-quantum cryptography for digital signatures/seals in EU context — algorithm adoption, migration timelines, vendor readiness
+- European Business Wallet developments (signing, sealing, corporate identity, commercial pricing models)
 
 **For accepted articles:**
 - `summary`: 2-3 sentences. What happened and why it matters for EUDI Wallet. Be specific.
