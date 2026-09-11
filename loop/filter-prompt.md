@@ -55,6 +55,12 @@ For each article, look at the title and excerpt. Ask: "Does this touch EU digita
 - Any EU member state's wallet implementation or pilot
 - Biometric identity verification (in EU/wallet context)
 - Any company or consortium working on EUDI (Signicat, walt.id, Sphereon, NOBID, DC4EU, etc.)
+- CSC API, Cloud Signature Consortium, remote signing, remote sealing
+- QSCD, QSealCD, HSM certification (EN 419241, Common Criteria) in EU/eIDAS context
+- Qualified electronic seals, e-sealing, document sealing in EU context
+- Post-quantum cryptography for digital signatures or trust services
+- European Business Wallet, corporate identity wallet
+- Any QTSP or signing infrastructure vendor (Buypass, primesign, Swisscom, A-Trust, Evrotrust, Zetes, Ascertia, Intesi Group, Certum, etc.)
 
 **Mark as `irrelevant` if:**
 - General cybersecurity news with no wallet/identity connection
