@@ -2,7 +2,7 @@ import { db } from "@/src/db/client";
 import { livingDoc } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 
-const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const RESEND_API_URL = "https://api.resend.com/emails";
 const BASE_URL = "https://eudi-wallet-tracker.vercel.app";
 
 function escapeHtml(str: string): string {
@@ -82,27 +82,23 @@ ${bodyHtml}
 </div></body></html>`;
 }
 
-export async function sendBrevoEmail(
+export async function sendEmail(
   to: string,
   subject: string,
   htmlContent: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const res = await fetch(BREVO_API_URL, {
+    const res = await fetch(RESEND_API_URL, {
       method: "POST",
       headers: {
-        "api-key": process.env.BREVO_API_KEY!,
-        "content-type": "application/json",
-        accept: "application/json",
+        Authorization: `Bearer ${process.env.RESEND_API_KEY!}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sender: {
-          name: "EUDI Tracker",
-          email: process.env.BREVO_SENDER_EMAIL!,
-        },
-        to: [{ email: to }],
+        from: "EUDI Tracker <onboarding@resend.dev>",
+        to,
         subject,
-        htmlContent,
+        html: htmlContent,
       }),
     });
 
@@ -145,7 +141,7 @@ export async function sendLatestUpdateToEmail(
 
   const html = buildNewsletterHtml(bodyHtml, updateDate, email);
 
-  return sendBrevoEmail(
+  return sendEmail(
     email,
     "EUDI Tracker \u2014 Welcome! Here\u2019s the latest intelligence",
     html

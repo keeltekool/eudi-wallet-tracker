@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import {
   markdownToHtml,
   buildNewsletterHtml,
-  sendBrevoEmail,
+  sendEmail,
 } from "@/src/lib/newsletter";
 
 export async function GET(req: Request) {
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       const results = await Promise.allSettled(
         batch.map((sub) => {
           const html = buildNewsletterHtml(bodyHtml, updateDate, sub.email);
-          return sendBrevoEmail(
+          return sendEmail(
             sub.email,
             "EUDI Tracker \u2014 New Intelligence Update",
             html

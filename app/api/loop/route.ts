@@ -192,7 +192,7 @@ export async function POST(req: Request) {
         articlesProcessed: u.articlesProcessed ?? 0,
         sectionsTouched: u.sectionsTouched ?? [],
       });
-      // ponytail: newsletter trigger omitted — Brevo is 401-broken; wire /api/newsletter/send here once Resend replaces it
+      // ponytail: newsletter trigger omitted — wire /api/newsletter/send here when subscribers exist
       return NextResponse.json({ inserted: true });
     }
 
