@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDbForProject } from "@/src/lib/db/connections";
+import { sources } from "@/src/db/schema-idearadar";
 
 export async function POST(request: NextRequest) {
-  const { url } = await request.json();
+  const body = await request.json();
+
+  // Direct source creation (from admin add-channel form)
+  if (body.project && body.name && body.type === "youtube") {
+    const db = getDbForProject(body.project);
+    const [created] = await db
+      .insert(sources)
+      .values({
+        name: body.name,
+        url: body.url,
+        type: "youtube" as any,
+        config: body.config || {},
+        active: body.active ?? true,
+      })
+      .returning();
+    return NextResponse.json(created, { status: 201 });
+  }
+
+  const { url } = body;
 
   try {
     // Fetch the YouTube channel page

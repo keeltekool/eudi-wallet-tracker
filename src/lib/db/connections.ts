@@ -6,12 +6,13 @@ import * as idearadarSchema from "../../db/schema-idearadar";
 import * as athlonSchema from "../../db/schema-athlon";
 import * as eewatchSchema from "../../db/schema-eewatch";
 
-export type ProjectId = "eudi" | "allekirjoitus" | "idearadar" | "athlon" | "eewatch";
+export type ProjectId = "eudi" | "allekirjoitus" | "idearadar" | "idearadar-youtube" | "athlon" | "eewatch";
 
 const ENV_VAR_BY_PROJECT: Record<ProjectId, string> = {
   eudi: "DATABASE_URL",
   allekirjoitus: "DATABASE_URL_ALLEKIRJOITUS",
   idearadar: "DATABASE_URL_IDEARADAR",
+  "idearadar-youtube": "DATABASE_URL_IDEARADAR",
   athlon: "DATABASE_URL_ATHLON",
   eewatch: "DATABASE_URL_EEWATCH",
 };
@@ -20,6 +21,7 @@ const SCHEMA_BY_PROJECT = {
   eudi: eudiSchema,
   allekirjoitus: allekirjoitusSchema,
   idearadar: idearadarSchema,
+  "idearadar-youtube": idearadarSchema,
   athlon: athlonSchema,
   eewatch: eewatchSchema,
 } as const;

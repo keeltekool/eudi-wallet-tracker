@@ -9,6 +9,7 @@ const OPTIONS = [
   { value: "eudi", label: "EUDI Wallet Tracker" },
   { value: "allekirjoitus", label: "Allekirjoitus Competitive Intel" },
   { value: "idearadar", label: "Idea Radar" },
+  { value: "idearadar-youtube", label: "Idea Radar YouTube" },
   { value: "athlon", label: "Athlon" },
   { value: "eewatch", label: "EE AI Builders Watch" },
 ] as const;
@@ -38,6 +39,7 @@ export function ProjectSwitcher() {
       cookieVal === "eudi" ||
       cookieVal === "allekirjoitus" ||
       cookieVal === "idearadar" ||
+      cookieVal === "idearadar-youtube" ||
       cookieVal === "athlon" ||
       cookieVal === "eewatch"
     ) {

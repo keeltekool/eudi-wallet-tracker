@@ -2,6 +2,7 @@ import { getSelectedProject } from "@/src/lib/project-context";
 import { EudiSourcesView } from "./sources/_components/eudi-sources-view";
 import { AllekirjoitusSourcesView } from "./sources/_components/allekirjoitus-sources-view";
 import { IdearadarSourcesView } from "./sources/_components/idearadar-sources-view";
+import { IdearadarYoutubeSourcesView } from "./sources/_components/idearadar-youtube-sources-view";
 import { AthlonAdminView } from "./athlon/_components/athlon-admin-view";
 import { EewatchSourcesView } from "./sources/_components/eewatch-sources-view";
 
@@ -16,6 +17,10 @@ export default async function AdminPage() {
 
   if (projectId === "idearadar") {
     return <IdearadarSourcesView />;
+  }
+
+  if (projectId === "idearadar-youtube") {
+    return <IdearadarYoutubeSourcesView />;
   }
 
   if (projectId === "athlon") {

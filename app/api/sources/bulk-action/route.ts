@@ -3,6 +3,7 @@ import { db } from "@/src/db/client";
 import { sources } from "@/src/db/schema";
 import { sources as allekirjoitusSources } from "@/src/db/schema-allekirjoitus";
 import { sources as eewatchSources } from "@/src/db/schema-eewatch";
+import { sources as idearadarSources } from "@/src/db/schema-idearadar";
 import { getDbForProject } from "@/src/lib/db/connections";
 import { inArray, eq } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
@@ -12,10 +13,14 @@ type Action = "delete" | "pause" | "resume" | "reanalyze";
 function resolveProject(
   request: NextRequest,
   body: Record<string, unknown>,
-): "eudi" | "allekirjoitus" | "eewatch" {
+): "eudi" | "allekirjoitus" | "eewatch" | "idearadar" | "idearadar-youtube" {
   const fromQuery = request.nextUrl.searchParams.get("project");
-  if (fromQuery === "allekirjoitus" || body.project === "allekirjoitus") return "allekirjoitus";
-  if (fromQuery === "eewatch" || body.project === "eewatch") return "eewatch";
+  const fromBody = body.project as string | undefined;
+  const p = fromQuery || fromBody;
+  if (p === "allekirjoitus") return "allekirjoitus";
+  if (p === "eewatch") return "eewatch";
+  if (p === "idearadar") return "idearadar";
+  if (p === "idearadar-youtube") return "idearadar-youtube";
   return "eudi";
 }
 
@@ -26,6 +31,23 @@ export async function POST(request: NextRequest) {
 
   if (!ids || ids.length === 0) {
     return NextResponse.json({ error: "No IDs provided" }, { status: 400 });
+  }
+
+  if (project === "idearadar" || project === "idearadar-youtube") {
+    const pDb = getDbForProject(project);
+    if (action === "delete") {
+      await pDb.delete(idearadarSources).where(inArray(idearadarSources.id, ids));
+      return NextResponse.json({ ok: true, action, count: ids.length });
+    }
+    if (action === "pause") {
+      await pDb.update(idearadarSources).set({ active: false }).where(inArray(idearadarSources.id, ids));
+      return NextResponse.json({ ok: true, action, count: ids.length });
+    }
+    if (action === "resume") {
+      await pDb.update(idearadarSources).set({ active: true }).where(inArray(idearadarSources.id, ids));
+      return NextResponse.json({ ok: true, action, count: ids.length });
+    }
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   }
 
   if (project === "allekirjoitus" || project === "eewatch") {

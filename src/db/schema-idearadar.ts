@@ -30,6 +30,7 @@ export const sourceTypeEnum = pgEnum("source_type", [
   "devto",
   "reddit",
   "rss",
+  "youtube",
 ]);
 
 export const discoveryStatusEnum = pgEnum("discovery_status", [

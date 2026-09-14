@@ -1,14 +1,16 @@
 import { getDbForProject } from "@/src/lib/db/connections";
 import { sources as idearadarSources } from "@/src/db/schema-idearadar";
 import { scrapeRuns } from "@/src/db/schema-idearadar";
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { IdearadarSourceTable } from "./idearadar-source-table";
 
 export async function IdearadarSourcesView() {
   const db = getDbForProject("idearadar");
 
   const [rows, lastRun] = await Promise.all([
-    db.select().from(idearadarSources).orderBy(desc(idearadarSources.lastScrapedAt)),
+    db.select().from(idearadarSources)
+      .where(sql`${idearadarSources.type} != 'youtube'`)
+      .orderBy(desc(idearadarSources.lastScrapedAt)),
     db.select().from(scrapeRuns).orderBy(desc(scrapeRuns.startedAt)).limit(1),
   ]);
 
