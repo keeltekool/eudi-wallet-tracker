@@ -7,7 +7,7 @@ config({ path: "../.env.local" });
 
 import { createDb } from "../../src/db/index";
 import { articles, sources } from "../../src/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -30,6 +30,7 @@ async function main() {
     })
     .from(articles)
     .where(eq(articles.status, "relevant"))
+    .orderBy(desc(articles.scrapedAt))
     .limit(50);
 
   if (pending.length === 0) {

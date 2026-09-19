@@ -1,6 +1,6 @@
 import { db } from "@/src/db/client";
 import { articles, sources, livingDoc } from "@/src/db/schema";
-import { and, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 /**
@@ -46,6 +46,7 @@ export async function GET(req: Request) {
         })
         .from(articles)
         .where(eq(articles.status, "pending"))
+        .orderBy(desc(articles.scrapedAt)) // ponytail: newest first so stale backlog can't starve fresh content
         .limit(100);
       const sourceMap = await withSourceNames(pending);
       return NextResponse.json({
@@ -72,6 +73,7 @@ export async function GET(req: Request) {
         })
         .from(articles)
         .where(eq(articles.status, "relevant"))
+        .orderBy(desc(articles.scrapedAt))
         .limit(50);
       const sourceMap = await withSourceNames(relevant);
       return NextResponse.json({
