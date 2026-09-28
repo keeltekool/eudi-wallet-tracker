@@ -114,8 +114,9 @@ export async function POST(request: NextRequest) {
 
         const anthropic = new Anthropic();
         const message = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-5-5",
           max_tokens: 1024,
+          thinking: { type: "between_tools" }, // no up-front thinking: plain text reply, as on Sonnet 4
           messages: [
             {
               role: "user",
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
           ],
         });
 
-        const text = message.content[0].type === "text" ? message.content[0].text : "";
+        const text = message.content.find((b) => b.type === "text")?.text ?? "";
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           results.push({ id: source.id, name: source.name, status: "no-json" });

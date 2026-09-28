@@ -10,7 +10,7 @@
 | **Vercel** | Next.js dashboard + admin hosting + Loop API | `LOOP_TOKEN` (scoped auth for `/api/loop`) |
 | **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) | `DATABASE_URL` (GH secret) |
 | **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5, runs filter→curate→living-doc via Loop API | token in routine prompt |
-| **Anthropic API** | One-off CSS selector analysis (~$0.01/source) | `ANTHROPIC_API_KEY` |
+| **Anthropic API** | One-off CSS selector analysis, `claude-sonnet-5-5` with `thinking: between_tools` (~$0.03/source est.; Sonnet 4 retired 15.06.2026 broke it until 28.09.2026) | `ANTHROPIC_API_KEY` |
 | **Loop Control Center** | FALLBACK ONLY — manual loops kept intact (`run loop eudi-relevance/-curation/-livingdoc`) | LCC API key in LCC `.env.local` |
 | **Resend** | Newsletter email delivery | `RESEND_API_KEY` |
 | **Google Drive** | Master Strategy Brief `.md` file (`G:\My Drive\SK_RE\EUDW\EUDI_Wallet_Strategy_Brief_Clean.md`) | — |

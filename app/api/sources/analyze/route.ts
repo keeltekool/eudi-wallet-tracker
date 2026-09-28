@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     // 2. Ask Claude to generate CSS selectors
     const anthropic = new Anthropic();
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-5-5",
       max_tokens: 1024,
+      thinking: { type: "between_tools" }, // no up-front thinking: plain text reply, as on Sonnet 4
       messages: [
         {
           role: "user",
@@ -54,8 +55,7 @@ ${truncatedHtml}`,
     });
 
     // 3. Parse the response
-    const text =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const text = message.content.find((b) => b.type === "text")?.text ?? "";
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON in AI response");
