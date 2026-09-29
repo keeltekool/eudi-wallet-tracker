@@ -12,12 +12,16 @@ type Props = {
   variant: "raw" | "curated";
 };
 
+// One fixed zone, so the server (UTC) and the browser render the same day and text (no hydration mismatch)
+const TIME_ZONE = "Europe/Tallinn";
+
 function formatCycleDate(date: Date): string {
   const d = new Date(date);
   return d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: TIME_ZONE,
   });
 }
 
@@ -25,7 +29,7 @@ function getCycleKey(article: Article): string {
   const date = article.publishedAt
     ? new Date(article.publishedAt)
     : new Date(article.scrapedAt);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return date.toLocaleDateString("en-CA", { timeZone: TIME_ZONE }); // YYYY-MM-DD
 }
 
 export function Feed({ articles, variant }: Props) {

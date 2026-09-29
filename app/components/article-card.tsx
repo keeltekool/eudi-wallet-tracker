@@ -39,6 +39,7 @@ function formatDate(date: Date | null): string {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "Europe/Tallinn", // same text on server and browser (see feed.tsx)
   });
 }
 

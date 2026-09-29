@@ -4,11 +4,12 @@
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
 
 const { chromium } = createRequire("C:/Users/Kasutaja/.claude/scripts/")("playwright");
-import { neon } from "@neondatabase/serverless";
 
-try { process.loadEnvFile(".env.local"); } catch {}
+config({ path: ".env.local" }); // dotenv: process.loadEnvFile fails on this file's BOM
 const BASE = (process.argv[2] || process.env.BASE || "http://localhost:3000").replace(/\/$/, "");
 const PASSWORD = process.env.ADMIN_PASSWORD;
 if (!PASSWORD) { console.error("ADMIN_PASSWORD not set"); process.exit(1); }
@@ -42,24 +43,6 @@ for (const width of [375, 1440]) {
     await page.goto(`${BASE}/admin/sources/new`);
     await page.getByPlaceholder("https://example.com/news").waitFor();
   });
-  await step(`${width}: /admin/runs shows Jev counts on the latest run`, async () => {
-    await page.goto(`${BASE}/admin/runs`);
-    const cells = await page.locator("tbody tr").first().locator("td").allInnerTexts();
-    const jev = cells.slice(5, 9); // Relevant, Irrelevant, Duplicates, Left pending
-    if (jev.length !== 4 || jev.some((c) => !/^d+$/.test(c.trim()))) throw new Error(`latest run Jev cells: ${JSON.stringify(jev)}`);
-  });
-  for (const path of PUBLIC_TABS) {
-    await step(`${width}: ${path} has no sideways scroll`, async () => {
-      await page.goto(`${BASE}${path}`);
-      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
-      if (sw > width) throw new Error(`scrollWidth ${sw} > ${width}`);
-    });
-  }
-  await step(`${width}: Filtered lists a Jev-sorted article`, async () => {
-    if (!jevSorted) throw new Error("no Jev-sorted article in the DB yet");
-    await page.goto(`${BASE}/filtered`);
-    await page.getByText(jevSorted.title, { exact: true }).first().waitFor({ timeout: 15000 });
-  });
   if (width === 1440) {
     await step("1440: Analyze a page without RSS → AI-generated selectors", async () => {
       await page.getByPlaceholder("https://example.com/news").fill(NO_RSS_PAGE);
@@ -72,6 +55,25 @@ for (const width of [375, 1440]) {
       if (await bad.isVisible()) throw new Error(await bad.innerText());
     });
   }
+  await step(`${width}: /admin/runs shows Jev counts on the latest run`, async () => {
+    await page.goto(`${BASE}/admin/runs`);
+    const cells = await page.locator("tbody tr").first().locator("td").allInnerTexts();
+    const jev = cells.slice(5, 9); // Relevant, Irrelevant, Duplicates, Left pending
+    if (jev.length !== 4 || jev.some((c) => !/^\d+$/.test(c.trim()))) throw new Error(`latest run Jev cells: ${JSON.stringify(jev)}`);
+  });
+  // The browser runs in this machine's zone (Tallinn), the server in UTC: date mismatches show up as page errors
+  for (const path of PUBLIC_TABS) {
+    await step(`${width}: ${path} has no sideways scroll`, async () => {
+      await page.goto(`${BASE}${path}`);
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      if (sw > width) throw new Error(`scrollWidth ${sw} > ${width}`);
+    });
+  }
+  await step(`${width}: Filtered lists a Jev-sorted article`, async () => {
+    if (!jevSorted) throw new Error("no Jev-sorted article in the DB yet");
+    await page.goto(`${BASE}/filtered`);
+    await page.getByText(jevSorted.title, { exact: true }).first().waitFor({ timeout: 15000 });
+  });
 
   await page.screenshot({ path: join(tmpdir(), `eudi-flows-${width}.png`) });
   if (errors.length) { failed++; console.log(`FAIL ${width}: page errors: ${errors.join(" | ")}`); }

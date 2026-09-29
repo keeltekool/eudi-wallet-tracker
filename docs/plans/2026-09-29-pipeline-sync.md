@@ -97,6 +97,8 @@
   - `scrollWidth <= 375` on every public tab;
   - Filtered lists an article the Gate 2 run sorted.
 
+- [ ] **Task 4.4 — Hydration fix (found by 4.3, 2026-09-29)** — `app/components/feed.tsx` and `article-card.tsx` group and format dates in the runtime's time zone (server UTC, browser Tallinn), so /filtered and /curated throw React #418 for Tallinn visitors. Pin `timeZone: "Europe/Tallinn"`. Proof: the 4.3 page-error check passes at 375 and 1440 (it failed on prod before).
+
 **Gate 4:** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
 
 ## Phase 5 — End to end and docs
