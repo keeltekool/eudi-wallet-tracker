@@ -34,7 +34,7 @@
   - eudi-relevance, eudi-curation, eudi-livingdoc, via the LCC API. The owner approves the delete with this plan.
   - First their full JSON is saved to a local backup file, outside the public repo.
   - The same goes for the live routine prompt before Task 1.2 changes it: it holds tokens, so its backup stays local only.
-- [ ] **Task 1.5 — Proof run**
+- [x] **Task 1.5 — Proof run** (2026-09-29, session cse_01PQdpfEwNHderyFnDskJRZR: 100 sorted 58/42, 58 curated 13 accepted, update #33 with 16 items in 8 sections incl. §7 and §12, Radar-Check 201)
   - RemoteTrigger `run` after 1.1–1.4 are pushed, then `get_run_log`:
     - the routine reads `loop/pipeline.md`;
     - Stage 0 sorts the pending backlog by the new scope;
