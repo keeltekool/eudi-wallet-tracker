@@ -212,6 +212,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ inserted: true, newsletter });
     }
 
+    if (op === "newsletter-send") {
+      // Re-sends the latest update log to active subscribers without writing a new update
+      // row, for when living-doc-update wrote the log but the send failed.
+      const newsletter = await sendLatestUpdate().catch((err) => ({ sent: 0, error: String(err) }));
+      return NextResponse.json({ resent: true, newsletter });
+    }
+
     if (op === "brief-patch") {
       // Replaces one "## " section of the Strategy Brief; the previous Brief is kept as row "bible-prev"
       const heading = String(body.heading ?? "").trim();

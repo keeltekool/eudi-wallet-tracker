@@ -1,6 +1,7 @@
 import { db } from "@/src/db/client";
 import { livingDoc, newsletterSubscribers } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { resendApiKey } from "@/src/lib/resend-key";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 const BASE_URL = "https://eudi-wallet-tracker.vercel.app";
@@ -91,7 +92,7 @@ export async function sendEmail(
     const res = await fetch(RESEND_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY!}`,
+        Authorization: `Bearer ${resendApiKey()}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -169,6 +170,17 @@ export async function sendLatestUpdate() {
 
   if (subscribers.length === 0) {
     return { sent: 0, reason: "No active subscribers" };
+  }
+
+  // Fail once, legibly, rather than repeating the same header error per subscriber.
+  try {
+    resendApiKey();
+  } catch (err) {
+    return {
+      sent: 0,
+      total: subscribers.length,
+      reason: err instanceof Error ? err.message : "RESEND_API_KEY unusable",
+    };
   }
 
   let sent = 0;
