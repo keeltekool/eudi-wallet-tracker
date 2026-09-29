@@ -28,7 +28,7 @@ export async function EudiRunsView() {
         {runs.length === 0 ? (
           <p className="text-gray-500">No scrape runs yet.</p>
         ) : (
-          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+          <div className="border border-gray-200 rounded-xl overflow-x-auto bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
@@ -47,6 +47,11 @@ export async function EudiRunsView() {
                   <th className="text-right px-4 py-3 font-medium text-gray-500">
                     Errors
                   </th>
+                  {["Relevant", "Irrelevant", "Duplicates", "Left pending"].map((h) => (
+                    <th key={h} className="text-right px-4 py-3 font-medium text-gray-500" title="Jev filter">
+                      {h}
+                    </th>
+                  ))}
                   <th className="text-right px-4 py-3 font-medium text-gray-500">
                     Duration
                   </th>
@@ -111,6 +116,11 @@ export async function EudiRunsView() {
                           "0"
                         )}
                       </td>
+                      {(["relevant", "irrelevant", "duplicates", "leftPending"] as const).map((k) => (
+                        <td key={k} className="px-4 py-3 text-right font-mono text-gray-600">
+                          {run.jev ? run.jev[k] : "—"}
+                        </td>
+                      ))}
                       <td className="px-4 py-3 text-right text-gray-500">
                         {duration !== null ? `${duration}s` : "—"}
                       </td>

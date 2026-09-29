@@ -1,10 +1,12 @@
 // Click-through of the admin flows (CLAUDE.md §2). Real login; Analyze makes one real Claude call at 1440.
+// Also: Jev counts on /admin/runs, no sideways scroll on the public tabs, a Jev-sorted article on Filtered.
 // Usage: node scripts/check-ui-flows.mjs <baseUrl>   (ADMIN_PASSWORD from .env.local or the environment)
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const { chromium } = createRequire("C:/Users/Kasutaja/.claude/scripts/")("playwright");
+import { neon } from "@neondatabase/serverless";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 const BASE = (process.argv[2] || process.env.BASE || "http://localhost:3000").replace(/\/$/, "");
@@ -12,6 +14,11 @@ const PASSWORD = process.env.ADMIN_PASSWORD;
 if (!PASSWORD) { console.error("ADMIN_PASSWORD not set"); process.exit(1); }
 // A news listing with no RSS at the URL or the common feed paths, so Analyze falls through to Claude.
 const NO_RSS_PAGE = "https://digital-strategy.ec.europa.eu/en/news";
+const PUBLIC_TABS = ["/", "/filtered", "/curated", "/strategy", "/newsletter"];
+// Newest article the scrape job's Jev filter passed (scrape_runs.jev exists only since the Jev filter)
+const [jevSorted] = await neon(process.env.DATABASE_URL)`
+  SELECT title FROM articles WHERE jev_score IS NOT NULL AND status IN ('relevant', 'accepted', 'rejected')
+  ORDER BY published_at DESC NULLS LAST, scraped_at DESC LIMIT 1`;
 
 let failed = 0;
 async function step(name, fn) {
@@ -34,6 +41,24 @@ for (const width of [375, 1440]) {
   await step(`${width}: Add source form opens`, async () => {
     await page.goto(`${BASE}/admin/sources/new`);
     await page.getByPlaceholder("https://example.com/news").waitFor();
+  });
+  await step(`${width}: /admin/runs shows Jev counts on the latest run`, async () => {
+    await page.goto(`${BASE}/admin/runs`);
+    const cells = await page.locator("tbody tr").first().locator("td").allInnerTexts();
+    const jev = cells.slice(5, 9); // Relevant, Irrelevant, Duplicates, Left pending
+    if (jev.length !== 4 || jev.some((c) => !/^d+$/.test(c.trim()))) throw new Error(`latest run Jev cells: ${JSON.stringify(jev)}`);
+  });
+  for (const path of PUBLIC_TABS) {
+    await step(`${width}: ${path} has no sideways scroll`, async () => {
+      await page.goto(`${BASE}${path}`);
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      if (sw > width) throw new Error(`scrollWidth ${sw} > ${width}`);
+    });
+  }
+  await step(`${width}: Filtered lists a Jev-sorted article`, async () => {
+    if (!jevSorted) throw new Error("no Jev-sorted article in the DB yet");
+    await page.goto(`${BASE}/filtered`);
+    await page.getByText(jevSorted.title, { exact: true }).first().waitFor({ timeout: 15000 });
   });
   if (width === 1440) {
     await step("1440: Analyze a page without RSS → AI-generated selectors", async () => {

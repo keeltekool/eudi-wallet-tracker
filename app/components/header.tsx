@@ -14,9 +14,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 bg-[#F5F3EE]/80 backdrop-blur-xl border-b border-[#E3E0D9]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-10 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
+      <div className="max-w-4xl mx-auto px-4 sm:px-10 py-2 md:py-0 md:h-14 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2">
+        <div className="contents md:flex md:items-center md:gap-6">
+          <Link href="/" className="flex items-center gap-2 order-1 md:order-none">
             <span
               className="text-lg font-bold tracking-tight text-[#1A1A2E]"
               style={{ fontFamily: "var(--font-display)" }}
@@ -25,7 +25,7 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-1 order-3 w-full md:order-none md:w-auto -mx-3 md:mx-0">
             {TABS.map((tab) => {
               const isActive =
                 tab.href === "/"
@@ -50,7 +50,7 @@ export function Header() {
           </nav>
         </div>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-4 order-2 md:order-none">
           <Link
             href="/strategy"
             className={`text-xs font-semibold uppercase tracking-wider transition-colors ${
