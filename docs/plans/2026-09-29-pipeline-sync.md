@@ -20,7 +20,7 @@
     - Stage 1: curate via `op=curate` / `curation-decisions`.
     - Stage 2: update log via `op=living-doc` / `op=bible` / `living-doc-update`.
     - Stage 3: Radar-Check report, error handling and the summary line.
-- [ ] **Task 1.2 — Live routine prompt**
+- [x] **Task 1.2 — Live routine prompt**
   - RemoteTrigger `get`, then `update` of `trig_01GjY2dYsjf58CnEJPNyrRK9`: keep the setup block with both tokens, the never-print rule and the Radar-Check call; everything else becomes "read and follow `loop/pipeline.md` from the checkout".
 - [x] **Task 1.3 — Delete dead code and prompts**, in one commit of its own, so it reverts on its own.
   - `loop/filter-prompt.md`, `loop/curate-prompt.md`.
@@ -30,7 +30,7 @@
   - Before deleting: `grep` proves nothing outside `docs/plans/` history references a file. After: `tsc` and `next build` are clean.
   - The dated files in `docs/plans/` stay as history.
   - **Guard:** delete only the files listed here. The shared radar admin (`app/admin/**`, `app/api/athlon/**`, `app/api/sources/**`, `app/api/runs/**`) and the other radars' schemas and env vars (`schema-idearadar.ts`, `schema-eewatch.ts`, `DATABASE_URL_ATHLON` / `_ALLEKIRJOITUS` / `_IDEARADAR` / `_EEWATCH`) are in use and stay.
-- [ ] **Task 1.4 — Delete the 3 LCC loops**
+- [x] **Task 1.4 — Delete the 3 LCC loops**
   - eudi-relevance, eudi-curation, eudi-livingdoc, via the LCC API. The owner approves the delete with this plan.
   - First their full JSON is saved to a local backup file, outside the public repo.
   - The same goes for the live routine prompt before Task 1.2 changes it: it holds tokens, so its backup stays local only.
