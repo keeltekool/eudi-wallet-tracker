@@ -1,6 +1,6 @@
 # EUDI Wallet Tracker — Stack
 
-> Last updated: 2026-08-16
+> Last updated: 2026-09-29
 
 ## Services
 
@@ -8,12 +8,11 @@
 |---------|---------|----------|
 | **Neon** | Postgres DB (sources, articles, scrape_runs) | `DATABASE_URL` |
 | **Vercel** | Next.js dashboard + admin hosting + Loop API | `LOOP_TOKEN` (scoped auth for `/api/loop`) |
-| **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) | `DATABASE_URL` (GH secret) |
-| **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5, runs filter→curate→living-doc via Loop API | token in routine prompt |
+| **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) + Jev filter | `DATABASE_URL`, `TYPESAFE_API_KEY` (GH secrets) |
+| **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5, follows `loop/pipeline.md` via the Loop API | Loop + Radar-Check tokens in the routine prompt only |
+| **TypeSafe AI (Jev)** | Relevance filter at scrape time (`worker/src/jev-filter.ts`, `jev-1.13.0`, cut 0.05), key `eudi-wallet-tracker` | `TYPESAFE_API_KEY` |
 | **Anthropic API** | One-off CSS selector analysis, `claude-sonnet-5-5` with `thinking: between_tools` (~$0.03/source est.; Sonnet 4 retired 15.06.2026 broke it until 28.09.2026) | `ANTHROPIC_API_KEY` |
-| **Loop Control Center** | FALLBACK ONLY — manual loops kept intact (`run loop eudi-relevance/-curation/-livingdoc`) | LCC API key in LCC `.env.local` |
-| **Resend** | Newsletter email delivery | `RESEND_API_KEY` |
-| **Google Drive** | Master Strategy Brief `.md` file (`G:\My Drive\SK_RE\EUDW\EUDI_Wallet_Strategy_Brief_Clean.md`) | — |
+| **Resend** | Newsletter: sent by `living-doc-update` after each weekly update (1 subscriber) | `RESEND_API_KEY`, `CRON_SECRET` (manual send) |
 | **Google Fonts** | Fraunces, DM Sans, Epilogue, JetBrains Mono | — |
 
 ## Brand
@@ -47,18 +46,21 @@ Password-protected via cookie gate (`ADMIN_PASSWORD` env var).
 ## Pipeline
 
 ```
-Scraper (GitHub Actions, Wed+Sat 06:00 UTC)
-  → pending articles in Neon
-AI Pipeline — AUTONOMOUS since 2026-08-16 (cloud routine "EUDI Pipeline",
-Wed 06:30 Tallinn, Opus 5, subscription-billed, via /api/loop endpoints):
-  1. Filter — relevant/irrelevant, loose, 3 rounds × 100/run
-  2. Curate — dedup first, fetch bodies for headline-only items, score 1-10,
-     threshold 8, summaries + categories
-  3. Living doc — [NEW_FACT]/[DEEPENED_INSIGHT] vs Strategy Brief → Neon
-NOT migrated to cloud (stay manual/local): Google Drive master-brief surgical
-updates (Drive unreachable from sandbox) and newsletter send.
-Manual LCC loops remain intact as instant fallback.
+Scrape job (GitHub Actions, Wed+Sat 06:00 UTC)
+  → store; a copy of a story scraped in the last 4 days → rejected "Duplicate of #id"
+  → Jev sorts every pending article relevant/irrelevant (score in articles.jev_score,
+    counts in scrape_runs.jev); Jev down → articles stay pending
+Weekly routine "EUDI Pipeline" (Wed 06:30 Tallinn, Opus 5, spends plan capacity):
+  prompt = tokens + "follow loop/pipeline.md" (the only copy of scope and rubric)
+  0. safety net: sort anything still pending   1. curate (score >= 8, summaries)
+  2. update log since the last update + brief-patch Brief sections + newsletter
+  3. Radar-Check report
 ```
+- **Rollback Jev:** `gh secret delete TYPESAFE_API_KEY`; Stage 0 sorts pending articles as before.
+- **Scope change:** edit `loop/pipeline.md` Scope AND the Jev question in `jev-filter.ts`, then re-fit with `Claude_Projects/jev/eval/eudi-filter.mjs`.
+- **Routine prompt:** change only via RemoteTrigger get → update; it holds tokens, the repo is public.
+- **Brief restore:** `living_doc` row `bible-prev` = the Brief before the last run's first patch. Neon is the only Brief (no Drive copy since 2026-09-29).
+- **Measure Jev per run:** `node Claude_Projects/jev/eval/measure-eudi-live.mjs`.
 
 ### Dashboard Tabs (public)
 - **All Articles:** raw firehose, all statuses, basic cards
@@ -80,7 +82,7 @@ npm run db:studio                  # Drizzle Studio
 
 - **Dashboard:** auto-deploys on push to `master` via Vercel
 - **Scraper:** GitHub Actions workflow `scrape.yml` — cron or manual `workflow_dispatch`
-- **AI Pipeline:** Autonomous — cloud routine `EUDI Pipeline` every Wed 06:30 Tallinn (manage via `/schedule` or claude.ai/code/routines). Manual fallback: LCC loops, unchanged.
+- **AI Pipeline:** Autonomous — cloud routine `EUDI Pipeline` every Wed 06:30 Tallinn (manage via `/schedule` or claude.ai/code/routines). Run on demand: RemoteTrigger `run`. The LCC loops were deleted 2026-09-29.
 
 ## Gotchas
 
@@ -92,14 +94,16 @@ npm run db:studio                  # Drizzle Studio
 | Render removed free background worker tier | Switched to GitHub Actions (free for public repos) |
 | Next.js 16 middleware deprecation warning | Still works, but `proxy` is the new convention |
 | `npm ci` fails with workspaces in GitHub Actions | Use `npm install` instead |
-| AI pipeline only runs when Claude Code is open | SOLVED 2026-08-16: cloud routine runs it Wed 06:30 unattended; manual LCC loops = fallback |
+| Routine prompt carried its own pasted copy of the rules; repo prompt edits never reached it (2026-09-11 → 29) | The prompt now only points at `loop/pipeline.md`; after a rules change, read the routine back with RemoteTrigger `get` |
+| `npx tsx` in `worker/src` runs from the workspace folder | Call `../../node_modules/.bin/tsx check-jev-filter.ts` |
+| `.env.local` has a BOM: `process.loadEnvFile` silently fails | Use dotenv (`config({ path })`) in every script |
+| Google's favicon service 404s (with a globe image) for icon-less sites → console errors, ship.mjs fails | Cards load `/api/favicon?domain=`, which passes the image through with 200 |
 | Cloud sandbox has no `gh` CLI; raw api.github.com org-blocked | Use GitHub MCP tools in routine prompts; git clone/push still work |
 | Cloud env vars are environment-WIDE and forbid secrets (UI warning) | Never put credentials there — use token-guarded app endpoints (`/api/loop` pattern, `LOOP_TOKEN` in Vercel) |
 | Feed quality caps curation: ~34% of rejects were unfetchable Google News JS redirects | Add direct publisher feeds (Biometric Update, Identity Week, Mobile ID World) to recover them |
 | Newsletter send route must be GET | Vercel crons (and manual triggers) send GET — never export POST |
 | Deleting source with FK on articles | FK constraint removed — `articles.sourceId` is a plain integer, no cascade needed |
 | Strict curation changed article counts | Threshold 8 (was looser) — curated count dropped from ~137 to ~76. Quality over quantity. |
-| Google Drive `.md` file = master brief | `EUDI_Wallet_Strategy_Brief_Clean.md` in `G:\My Drive\SK_RE\EUDW\`. NOT the `_NEW` file (has escaped markdown from Docs export). Google Docs decommissioned April 2026. |
 
 ## Post-Deploy Smoke Tests
 
@@ -112,7 +116,8 @@ npm run db:studio                  # Drizzle Studio
 7. Admin source table — filter by status, sort by columns, bulk select works
 8. Click a broken source → "Fix with AI" banner visible
 9. Visit `/newsletter` — subscribe page renders, form works
-10. **Newsletter:** Trigger manually: `GET /api/newsletter/send` with `Authorization: Bearer <CRON_SECRET>` — must return `{ sent: N }` with `errors: 0`
+10. **Newsletter:** the routine's `living-doc-update` response shows `newsletter.sent`; manual resend: `GET /api/newsletter/send` with `Authorization: Bearer <CRON_SECRET>`
+11. **Automated:** `node ~/.claude/scripts/ship.mjs / /filtered /curated /strategy /newsletter` (runs `scripts/check-ui-flows.mjs`: admin, Jev counts, 375 px overflow, Filtered)
 
 ## Federated Admin (2026-04-17)
 
