@@ -96,8 +96,8 @@ Check that the response `total` equals the number you sent.
 ## Stage 2 — Weekly update log
 
 ```bash
-SINCE=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
-curl -s -H "$AUTH" "$API?op=living-doc&since=$SINCE" > /tmp/accepted.json
+# last-update = everything accepted since the previous update log was written
+curl -s -H "$AUTH" "$API?op=living-doc&since=last-update" > /tmp/accepted.json
 curl -s -H "$AUTH" "$API?op=bible" > /tmp/bible.json
 ```
 

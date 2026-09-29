@@ -63,10 +63,10 @@
     - `filterPending(db, apiKey?): Promise<Omit<JevRunCounts, "duplicates">>`
     - `runScrape(db, typesafeKey?: string)`: calls `filterPending` after the source loop and writes `scrapeRuns.jev`.
   - Proof: `cd worker/src && ../../node_modules/.bin/tsx check-jev-filter.ts` (npx runs from the workspace folder, not the cwd) → PASS for three cases: a bad key gives null; EUDI news scores ≥ 0.05; an enterprise IAM report scores < 0.05.
-- [ ] **Task 2.4 — Key**
+- [x] **Task 2.4 — Key**
   - The owner creates the TypeSafe key `eudi-wallet-tracker`. It goes to `.env.local` and to `gh secret set TYPESAFE_API_KEY`, piped, never printed.
 
-**Gate 2:**
+**Gate 2 — PASSED 2026-09-29** (self-check 3/3: bad key null, EUDI 0.99, IAM 0.03; local bad-key run 64: 58 left pending + warning; GitHub run 36612056191 / scrape run 65: 68 sorted 39/29, 0 left pending, 11 same-story duplicates):**
 - A real `workflow_dispatch` of "Scrape Sources": the log shows `[jev] … 0 left pending`.
 - Neon: no `pending` rows, a `jev_score` on every sorted article, `scrape_runs.jev` filled.
 - A local dry run with a bad key leaves everything pending and prints the warning.
@@ -88,6 +88,7 @@
 - a same-content patch → 200, with `bible` unchanged and `bible-prev` saved;
 - `op=living-doc&since=<7 days>` includes the 23.09 accepted articles the old filter missed.
 - Neon `newsletter_subscribers` holds only `egertv@gmail.com`.
+- [ ] **Task 3.4 — `since=last-update` (deviation, 2026-09-29)** — a fixed 7-day window reports the same accepted articles twice when runs are under a week apart (the Phase 1 proof run, the Phase 5 run and the 30.09 scheduled run). `op=living-doc&since=last-update` resolves to the latest update row's `run_date`; `loop/pipeline.md` Stage 2 uses it. One-off: update #33 (the Phase 1 proof run's output, backed up locally) is removed so the Phase 5 run reports its 13 accepts with Brief patches, and `curated_at` is backfilled to 2026-09-29 18:00 UTC for articles run #33 curated (scraped 23.09 05:00–29.09 17:50, status accepted/rejected).
 
 ## Phase 4 — Admin and header
 - [x] **Task 4.1** — `app/admin/runs/_components/eudi-runs-view.tsx`: Jev columns (relevant, irrelevant, duplicates, left pending), "—" on older runs.

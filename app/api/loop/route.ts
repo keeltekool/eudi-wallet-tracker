@@ -91,7 +91,17 @@ export async function GET(req: Request) {
     }
 
     if (op === "living-doc") {
-      const since = url.searchParams.get("since");
+      let since = url.searchParams.get("since");
+      if (since === "last-update") {
+        // Everything accepted since the previous update log, however long ago that run was
+        const [last] = await db
+          .select({ runDate: livingDoc.runDate })
+          .from(livingDoc)
+          .where(eq(livingDoc.section, "update"))
+          .orderBy(desc(livingDoc.runDate))
+          .limit(1);
+        since = last?.runDate ? last.runDate.toISOString() : null;
+      }
       const conditions = [eq(articles.status, "accepted")];
       // Curation time, not scrape time: an article scraped before `since` but accepted after it still counts
       if (since) conditions.push(sql`coalesce(${articles.curatedAt}, ${articles.scrapedAt}) > ${new Date(since)}`);
