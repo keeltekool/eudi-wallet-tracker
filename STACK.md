@@ -29,7 +29,7 @@
 
 ## Admin
 
-Sources, source health and scrape runs of this radar are managed in **Scrapyard** (the shared admin for all radars). Scrapyard reads and writes this database's `sources` table and reads `scrape_runs`, via its own `DATABASE_URL_EUDI` (same value as `DATABASE_URL` here). A `sources`/`scrape_runs` schema change here must be mirrored in `scrapyard/schemas/eudi.ts`.
+Sources, source health and scrape runs of this radar are managed in **Scrapyard** (the shared admin for all radars). Scrapyard reads and writes this database's `sources` table and reads `scrape_runs`, via its own `DATABASE_URL_EUDI` (same value as `DATABASE_URL` here). A `sources`/`scrape_runs` schema change here must be mirrored in `scrapyard/radars/eudi.ts`.
 
 ## Pipeline
 
