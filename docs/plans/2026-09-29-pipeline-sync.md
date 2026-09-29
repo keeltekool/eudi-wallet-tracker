@@ -88,7 +88,7 @@
 - a same-content patch → 200, with `bible` unchanged and `bible-prev` saved;
 - `op=living-doc&since=<7 days>` includes the 23.09 accepted articles the old filter missed.
 - Neon `newsletter_subscribers` holds only `egertv@gmail.com`.
-- [ ] **Task 3.4 — `since=last-update` (deviation, 2026-09-29)** — a fixed 7-day window reports the same accepted articles twice when runs are under a week apart (the Phase 1 proof run, the Phase 5 run and the 30.09 scheduled run). `op=living-doc&since=last-update` resolves to the latest update row's `run_date`; `loop/pipeline.md` Stage 2 uses it. One-off: update #33 (the Phase 1 proof run's output, backed up locally) is removed so the Phase 5 run reports its 13 accepts with Brief patches, and `curated_at` is backfilled to 2026-09-29 18:00 UTC for articles run #33 curated (scraped 23.09 05:00–29.09 17:50, status accepted/rejected).
+- [x] **Task 3.4 — `since=last-update` (deviation, 2026-09-29)** — a fixed 7-day window reports the same accepted articles twice when runs are under a week apart (the Phase 1 proof run, the Phase 5 run and the 30.09 scheduled run). `op=living-doc&since=last-update` resolves to the latest update row's `run_date`; `loop/pipeline.md` Stage 2 uses it. One-off: update #33 (the Phase 1 proof run's output, backed up locally) is removed so the Phase 5 run reports its 13 accepts with Brief patches, and `curated_at` is backfilled to 2026-09-29 18:00 UTC for articles run #33 curated (scraped 23.09 05:00–29.09 17:50, status accepted/rejected).
 
 ## Phase 4 — Admin and header
 - [x] **Task 4.1** — `app/admin/runs/_components/eudi-runs-view.tsx`: Jev columns (relevant, irrelevant, duplicates, left pending), "—" on older runs.
@@ -100,9 +100,9 @@
 
 - [x] **Task 4.4 — Hydration fix (found by 4.3, 2026-09-29)** — `app/components/feed.tsx` and `article-card.tsx` group and format dates in the runtime's time zone (server UTC, browser Tallinn), so /filtered and /curated throw React #418 for Tallinn visitors. Pin `timeZone: "Europe/Tallinn"`. Proof: the 4.3 page-error check passes at 375 and 1440 (it failed on prod before).
 
-- [ ] **Task 4.5 — Favicon 404s (found by ship.mjs, 2026-09-29)** — Google's favicon service answers 404 with a default globe image for sites without a favicon (aptitude.digital-identity-wallet.eu, scraped in the Gate 2 run), so / and /filtered log a console error on every view and verify-deploy fails. New `app/api/favicon/route.ts` passes Google's image through with 200 and CDN caching; `article-card.tsx` points at it. Proof: verify-deploy on / and /filtered passes (fails now).
+- [x] **Task 4.5 — Favicon 404s (found by ship.mjs, 2026-09-29)** — Google's favicon service answers 404 with a default globe image for sites without a favicon (aptitude.digital-identity-wallet.eu, scraped in the Gate 2 run), so / and /filtered log a console error on every view and verify-deploy fails. New `app/api/favicon/route.ts` passes Google's image through with 200 and CDN caching; `article-card.tsx` points at it. Proof: verify-deploy on / and /filtered passes (fails now).
 
-**Gate 4:** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
+**Gate 4 — PASSED 2026-09-29** (ship.mjs 513ab34: verify-deploy 10/10, check-ui-flows all passed at 375 and 1440):** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
 
 ## Phase 5 — End to end and docs
 - [ ] **Task 5.1** — RemoteTrigger `run` plus `get_run_log`:
