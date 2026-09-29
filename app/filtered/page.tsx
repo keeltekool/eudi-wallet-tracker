@@ -1,13 +1,13 @@
 import { db } from "@/src/db/client";
 import { articles, sources } from "@/src/db/schema";
-import { desc, inArray } from "drizzle-orm";
+import { and, desc, inArray, sql } from "drizzle-orm";
 import { Feed } from "../components/feed";
 import { Header } from "../components/header";
 
 export const dynamic = "force-dynamic";
 
 export default async function FilteredPage() {
-  // Filtered = passed the relevance gate (relevant, accepted, rejected)
+  // Filtered = passed the relevance gate (relevant, accepted, rejected by curation)
   // NOT pending, NOT irrelevant
   // Displayed as raw cards — no enrichment shown
   const filteredArticles = await db
@@ -25,7 +25,14 @@ export default async function FilteredPage() {
       author: articles.author,
     })
     .from(articles)
-    .where(inArray(articles.status, ["relevant", "accepted", "rejected"]))
+    .where(
+      and(
+        inArray(articles.status, ["relevant", "accepted", "rejected"]),
+        // Scrape-time same-story copies never passed a relevance check (no score); they stay on All articles
+        sql`not (${articles.status} = 'rejected' and ${articles.relevanceScore} is null
+          and coalesce(${articles.rejectionReason}, '') like 'Duplicate of #%')`
+      )
+    )
     .orderBy(desc(articles.publishedAt), desc(articles.scrapedAt))
     .limit(500);
 

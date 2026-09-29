@@ -93,14 +93,14 @@ export async function GET(req: Request) {
     if (op === "living-doc") {
       let since = url.searchParams.get("since");
       if (since === "last-update") {
-        // Everything accepted since the previous update log, however long ago that run was
+        // Everything accepted since the previous update log was written (server clock, not the routine's runDate)
         const [last] = await db
-          .select({ runDate: livingDoc.runDate })
+          .select({ createdAt: livingDoc.createdAt })
           .from(livingDoc)
           .where(eq(livingDoc.section, "update"))
-          .orderBy(desc(livingDoc.runDate))
+          .orderBy(desc(livingDoc.createdAt))
           .limit(1);
-        since = last?.runDate ? last.runDate.toISOString() : null;
+        since = last?.createdAt ? last.createdAt.toISOString() : null;
       }
       const conditions = [eq(articles.status, "accepted")];
       // Curation time, not scrape time: an article scraped before `since` but accepted after it still counts
@@ -224,6 +224,10 @@ export async function POST(req: Request) {
       if (!heading.startsWith("## ") || hits.length !== 1) {
         return NextResponse.json({ error: `heading must match one "## " line exactly; found ${hits.length}` }, { status: 400 });
       }
+      // A heading line in the body would add a section (or duplicate this one) and break every later patch of it
+      if (/^#{1,2} /m.test(content)) {
+        return NextResponse.json({ error: "content must be the section body only: no # or ## heading lines" }, { status: 400 });
+      }
       const start = hits[0] + 1;
       const next = lines.findIndex((l, i) => i >= start && l.startsWith("## "));
       const end = next === -1 ? lines.length : next;
@@ -245,7 +249,8 @@ export async function POST(req: Request) {
       }
 
       // Swap only the trimmed text so the blank lines around it stay as they were (function replacer: no $ patterns)
-      const newBlock = rawBlock.replace(oldBlock, () => content);
+      const eol = bible.content.includes("\r\n") ? "\r\n" : "\n"; // the Brief is CRLF; keep it uniform
+      const newBlock = rawBlock.replace(oldBlock, () => content.replace(/\r?\n/g, eol));
       const patched = [...lines.slice(0, start), newBlock, ...lines.slice(end)].join("\n");
       await db.update(livingDoc).set({ content: patched, runDate: new Date() }).where(eq(livingDoc.id, bible.id));
       return NextResponse.json({ patched: true, heading });

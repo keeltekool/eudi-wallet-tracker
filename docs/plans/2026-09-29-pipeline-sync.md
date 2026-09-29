@@ -119,6 +119,15 @@
   - Jev `KNOWLEDGE.md` (§10, §11 live entry, §15, and the correction that subscription routines spend plan capacity, not "$0");
   - a per-run measure step in `jev/eval/`.
 
+- [ ] **Task 5.3 — code-reviewer fixes (2026-09-29)**
+  - `titleKey` returns "" under 25 characters: bare release tags (`v0.9.1`: 10 colliding keys in Neon) and short blog titles never mark a same-story duplicate.
+  - Aggregator sources (news.google.com, rss.app) scrape last, so the direct publisher's copy with a body is the one kept.
+  - /filtered hides scrape-time duplicates (`rejected`, no `relevance_score`, "Duplicate of #"); they stay visible on All articles.
+  - `since=last-update` uses the update row's server-set `created_at`, not the routine-written `run_date`.
+  - `brief-patch` refuses content with a `#`/`##` heading line, and converts content to the Brief's line endings (CRLF).
+  - Minor: `jevScore` returns null for a non-numeric answer; the worker pool uses `allSettled` so counts stay exact; `/api/favicon` caches only Google's 200/404 and answers anything else or a network error with a transparent 1×1 GIF; `check-ui-flows` pins `timezoneId: Europe/Tallinn`.
+  - Not changed: one per-article 4xx switches Jev off for the run (the planned run-level switch; Stage 0 sorts leftovers); the 2-hour `bible-prev` window (documented in code).
+
 **Gate 5:** the run log facts above, plus a Neon update row dated today. Then `code-reviewer`, `/simplify`, final ship.mjs, `/wrap-up`.
 
 ## Deviations (2026-09-29, build session)
@@ -130,7 +139,7 @@
 - Jev down → articles stay pending; the next scrape retries, and the routine's Stage 0 sorts leftovers (Gate 2 dry run with a bad key).
 - A 1,000+ article backlog import → Jev sorts it within the 10-minute job cap (~1 min per 1,000 at 5 workers).
 - A bad Brief write → `brief-patch` refuses short or missing blocks; `bible-prev` restores in one row.
-- Different articles with the same headline → the 4-day window limits it; they're visible as "Duplicate of #id" in Filtered.
+- Different articles with the same headline → the 4-day window limits it; they're visible as "Duplicate of #id" on All articles.
 - Rules drift again → only `loop/pipeline.md` and the Jev question hold the scope; Gate 1's grep.
 
 ## Out of scope

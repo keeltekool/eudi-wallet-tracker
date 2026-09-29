@@ -29,7 +29,8 @@ async function step(name, fn) {
 
 const browser = await chromium.launch();
 for (const width of [375, 1440]) {
-  const page = await browser.newPage({ viewport: { width, height: width === 375 ? 812 : 900 } });
+  // Tallinn, not UTC like the server: a date rendered in the runtime's zone shows up as a hydration page error
+  const page = await browser.newPage({ viewport: { width, height: width === 375 ? 812 : 900 }, timezoneId: "Europe/Tallinn" });
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
@@ -61,7 +62,6 @@ for (const width of [375, 1440]) {
     const jev = cells.slice(5, 9); // Relevant, Irrelevant, Duplicates, Left pending
     if (jev.length !== 4 || jev.some((c) => !/^\d+$/.test(c.trim()))) throw new Error(`latest run Jev cells: ${JSON.stringify(jev)}`);
   });
-  // The browser runs in this machine's zone (Tallinn), the server in UTC: date mismatches show up as page errors
   for (const path of PUBLIC_TABS) {
     await step(`${width}: ${path} has no sideways scroll`, async () => {
       await page.goto(`${BASE}${path}`);

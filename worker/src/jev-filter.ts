@@ -51,7 +51,10 @@ export async function jevScore(apiKey: string, a: FilterArticle): Promise<number
         body,
         signal: AbortSignal.timeout(8_000), // normal call ~0.3 s
       });
-      if (r.ok) return (await r.json()).answers.eu_trust.noul;
+      if (r.ok) {
+        const s = (await r.json())?.answers?.eu_trust?.noul;
+        return typeof s === "number" && Number.isFinite(s) ? s : null; // a changed answer shape leaves articles pending
+      }
       if (r.status !== 429 && r.status < 500) return null; // bad key or request: retrying won't help
     } catch {
       // timeout or network error: retry
@@ -95,11 +98,12 @@ export async function filterPending(db: Database, apiKey?: string): Promise<Omit
       else irrelevant++;
     }
   }
-  try {
-    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
-  } catch (err) {
-    jevDown = true;
-    console.error(`[jev] filter stopped: ${err instanceof Error ? err.message : String(err)}`);
+  // allSettled: a DB error in one worker must not return before the others finish (their counts would be lost)
+  const results = await Promise.allSettled(
+    Array.from({ length: CONCURRENCY }, () => worker().catch((err) => { jevDown = true; throw err; }))
+  );
+  for (const r of results) {
+    if (r.status === "rejected") console.error(`[jev] filter stopped: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
   }
 
   const leftPending = total - relevant - irrelevant;

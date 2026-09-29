@@ -1,4 +1,4 @@
-import { desc, eq, gt } from "drizzle-orm";
+import { desc, eq, gt, sql } from "drizzle-orm";
 import { articles, sources, scrapeRuns } from "../../src/db/schema";
 import type { ScrapeError } from "../../src/db/schema";
 import type { Database } from "../../src/db/index";
@@ -32,11 +32,12 @@ export async function runScrape(db: Database, typesafeKey?: string): Promise<voi
     const recent = new Map(recentRows.map((a) => [titleKey(a.title), a.id]));
     recent.delete("");
 
-    // 2. Load active sources
+    // 2. Load active sources; aggregators last, so a story's first (kept) copy is the publisher's own, with a body
     const activeSources = await db
       .select()
       .from(sources)
-      .where(eq(sources.active, true));
+      .where(eq(sources.active, true))
+      .orderBy(sql`(${sources.url} like '%news.google.com%' or ${sources.url} like '%rss.app%')`);
 
     console.log(`[scrape] Found ${activeSources.length} active sources`);
 

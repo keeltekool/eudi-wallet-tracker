@@ -8,6 +8,11 @@ describe("titleKey", () => {
     );
   });
 
+  it("gives no key to short titles, so two repos' 'v0.9.1' releases never collide", () => {
+    expect(titleKey("v0.9.1")).toBe("");
+    expect(titleKey("DNS Failover - Standard Practice in 2023 | DigiCert")).toBe("");
+  });
+
   it("keeps different stories apart", () => {
     expect(titleKey("Identt joins Poland’s mObywatel Europa EUDI Wallet sandbox")).not.toBe(
       titleKey("EU sets digital ID rules for cross-border health data exchange")
