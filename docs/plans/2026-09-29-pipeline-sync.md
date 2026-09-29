@@ -100,6 +100,8 @@
 
 - [x] **Task 4.4 — Hydration fix (found by 4.3, 2026-09-29)** — `app/components/feed.tsx` and `article-card.tsx` group and format dates in the runtime's time zone (server UTC, browser Tallinn), so /filtered and /curated throw React #418 for Tallinn visitors. Pin `timeZone: "Europe/Tallinn"`. Proof: the 4.3 page-error check passes at 375 and 1440 (it failed on prod before).
 
+- [ ] **Task 4.5 — Favicon 404s (found by ship.mjs, 2026-09-29)** — Google's favicon service answers 404 with a default globe image for sites without a favicon (aptitude.digital-identity-wallet.eu, scraped in the Gate 2 run), so / and /filtered log a console error on every view and verify-deploy fails. New `app/api/favicon/route.ts` passes Google's image through with 200 and CDN caching; `article-card.tsx` points at it. Proof: verify-deploy on / and /filtered passes (fails now).
+
 **Gate 4:** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
 
 ## Phase 5 — End to end and docs

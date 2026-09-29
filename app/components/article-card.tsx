@@ -27,7 +27,7 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string; border: string
 function getFaviconUrl(articleUrl: string): string {
   try {
     const domain = new URL(articleUrl).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    return `/api/favicon?domain=${domain}`; // pass-through: Google's 404 for icon-less sites logs console errors
   } catch {
     return "";
   }
