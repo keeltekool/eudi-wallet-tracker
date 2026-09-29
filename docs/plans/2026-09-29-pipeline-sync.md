@@ -62,7 +62,7 @@
     - `jevScore(apiKey: string, a: { title: string; source: string | null; fullText: string | null }): Promise<number | null>`
     - `filterPending(db, apiKey?): Promise<Omit<JevRunCounts, "duplicates">>`
     - `runScrape(db, typesafeKey?: string)`: calls `filterPending` after the source loop and writes `scrapeRuns.jev`.
-  - Proof: `cd worker/src && npx tsx check-jev-filter.ts` → PASS for three cases: a bad key gives null; EUDI news scores ≥ 0.05; an enterprise IAM report scores < 0.05.
+  - Proof: `cd worker/src && ../../node_modules/.bin/tsx check-jev-filter.ts` (npx runs from the workspace folder, not the cwd) → PASS for three cases: a bad key gives null; EUDI news scores ≥ 0.05; an enterprise IAM report scores < 0.05.
 - [ ] **Task 2.4 — Key**
   - The owner creates the TypeSafe key `eudi-wallet-tracker`. It goes to `.env.local` and to `gh secret set TYPESAFE_API_KEY`, piped, never printed.
 
@@ -115,6 +115,11 @@
   - a per-run measure step in `jev/eval/`.
 
 **Gate 5:** the run log facts above, plus a Neon update row dated today. Then `code-reviewer`, `/simplify`, final ship.mjs, `/wrap-up`.
+
+## Deviations (2026-09-29, build session)
+- **Order:** Phases 2–4 were coded on branch `pipeline-sync` while Gate 1's run and the TypeSafe key were pending. Gates still run in order, and a phase is ticked only after its gate. Phase 2 code without the key is the rollback path (everything stays pending, Stage 0 sorts), so it can ship before Gate 2.
+- **`bible-prev`:** it holds the Brief as it was before a run's first patch (a patch within 2 hours of the last one doesn't overwrite it), so one row restores a whole run.
+- **Update log format:** no `## Update:` header in the content; `/strategy` prints the date itself and every routine log since 16.08 starts at `### Section`.
 
 ## Review focus
 - Jev down → articles stay pending; the next scrape retries, and the routine's Stage 0 sorts leftovers (Gate 2 dry run with a bad key).
