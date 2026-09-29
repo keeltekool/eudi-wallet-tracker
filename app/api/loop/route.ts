@@ -5,8 +5,7 @@ import { NextResponse } from "next/server";
 
 /**
  * Loop API — token-guarded endpoints for the EUDI Pipeline cloud routine.
- * Mirrors worker/src/{filter,curate,living-doc-articles,update-*}.ts so the
- * routine never needs DATABASE_URL. Auth: Bearer LOOP_TOKEN (Vercel env).
+ * The routine follows loop/pipeline.md and never needs DATABASE_URL. Auth: Bearer LOOP_TOKEN (Vercel env).
  */
 
 function unauthorized(req: Request) {

@@ -72,11 +72,8 @@ Manual LCC loops remain intact as instant fallback.
 npm run dev                        # Next.js on port 3000
 cd worker && npm run scrape        # Manual scrape
 cd worker && npm run seed          # Re-seed sources
-cd worker && npx tsx src/filter.ts # Read pending for filter
-cd worker && npx tsx src/curate.ts # Read relevant for curation
 npm run db:push                    # Push schema to Neon
 npm run db:studio                  # Drizzle Studio
-cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md file
 ```
 
 ## Deploy
@@ -102,7 +99,7 @@ cd worker && npx tsx src/seed-bible.ts <path>  # Re-seed Strategy Brief from .md
 | Newsletter send route must be GET | Vercel crons (and manual triggers) send GET — never export POST |
 | Deleting source with FK on articles | FK constraint removed — `articles.sourceId` is a plain integer, no cascade needed |
 | Strict curation changed article counts | Threshold 8 (was looser) — curated count dropped from ~137 to ~76. Quality over quantity. |
-| Google Drive `.md` file = master brief | `EUDI_Wallet_Strategy_Brief_Clean.md` in `G:\My Drive\SK_RE\EUDW\`. NOT the `_NEW` file (has escaped markdown from Docs export). Seed via `seed-bible.ts`. Google Docs decommissioned April 2026. |
+| Google Drive `.md` file = master brief | `EUDI_Wallet_Strategy_Brief_Clean.md` in `G:\My Drive\SK_RE\EUDW\`. NOT the `_NEW` file (has escaped markdown from Docs export). Google Docs decommissioned April 2026. |
 
 ## Post-Deploy Smoke Tests
 

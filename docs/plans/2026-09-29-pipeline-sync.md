@@ -13,7 +13,7 @@
 - The routine prompt changes only through RemoteTrigger `update` after a `get`.
 
 ## Phase 1 — Simplify: one pipeline, one rules file, current rules live
-- [ ] **Task 1.1 — `loop/pipeline.md`**
+- [x] **Task 1.1 — `loop/pipeline.md`**
   - Content: the header (who reads this, the Jev re-fit rule); the scope (in and out, the 2026-09-11 version); the curation rubric (score bands, threshold 8, reject and accept lists, summaries, categories).
   - The routine's steps, with the live prompt's API calls kept:
     - Stage 0: pending safety net via `op=filter` / `filter-decisions`.
@@ -22,7 +22,7 @@
     - Stage 3: Radar-Check report, error handling and the summary line.
 - [ ] **Task 1.2 — Live routine prompt**
   - RemoteTrigger `get`, then `update` of `trig_01GjY2dYsjf58CnEJPNyrRK9`: keep the setup block with both tokens, the never-print rule and the Radar-Check call; everything else becomes "read and follow `loop/pipeline.md` from the checkout".
-- [ ] **Task 1.3 — Delete dead code and prompts**, in one commit of its own, so it reverts on its own.
+- [x] **Task 1.3 — Delete dead code and prompts**, in one commit of its own, so it reverts on its own.
   - `loop/filter-prompt.md`, `loop/curate-prompt.md`.
   - `worker/src/filter.ts`, `update-filter.ts`, `curate.ts`, `update-articles.ts`, `living-doc-articles.ts`, `update-living-doc.ts`, `seed-bible.ts`.
   - The tracked junk file `tmp-snapshot.txt`, and the untracked `deploy-verify-*.png` leftovers.
