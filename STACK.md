@@ -7,11 +7,10 @@
 | Service | Purpose | Env Vars |
 |---------|---------|----------|
 | **Neon** | Postgres DB (sources, articles, scrape_runs) | `DATABASE_URL` |
-| **Vercel** | Next.js dashboard + admin hosting + Loop API | `LOOP_TOKEN` (scoped auth for `/api/loop`) |
+| **Vercel** | Next.js dashboard + Loop API | `LOOP_TOKEN` (scoped auth for `/api/loop`) |
 | **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) + Jev filter | `DATABASE_URL`, `TYPESAFE_API_KEY` (GH secrets) |
 | **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5.5 (`claude-opus-5-5` since 29.09), follows `loop/pipeline.md` via the Loop API | Loop + Radar-Check tokens in the routine prompt only |
 | **TypeSafe AI (Jev)** | Relevance filter at scrape time (`worker/src/jev-filter.ts`, `jev-1.13.0`, cut 0.05), key `eudi-wallet-tracker` | `TYPESAFE_API_KEY` |
-| **Anthropic API** | One-off CSS selector analysis, `claude-sonnet-5-5` with `thinking: between_tools` (~$0.03/source est.; Sonnet 4 retired 15.06.2026 broke it until 28.09.2026) | `ANTHROPIC_API_KEY` |
 | **Resend** | Newsletter: sent by `living-doc-update` after each weekly update (1 subscriber) | `RESEND_API_KEY`, `CRON_SECRET` (manual send) |
 | **Google Fonts** | Fraunces, DM Sans, Epilogue, JetBrains Mono | — |
 
@@ -26,22 +25,11 @@
 ## Auth
 
 - Dashboard: public, no auth (3 tabs: All Articles, Filtered, Curated)
-- Admin (`/admin`): cookie-based password gate, env var `ADMIN_PASSWORD`
-- See Admin section below for full feature inventory
+- Admin: **moved to Scrapyard** (https://scrapyard-ten.vercel.app, repo `keeltekool/scrapyard`) on 2026-09-29. `/admin/*` here answers 308 to Scrapyard. Do not add admin UI to this repo.
 
-## Admin (`/admin`)
+## Admin
 
-Password-protected via cookie gate (`ADMIN_PASSWORD` env var).
-
-- **Source table:** filterable by status/type/category, sortable columns (name, status, last scraped, article count), external link icons
-- **Bulk actions:** multi-select sources → delete, pause, resume, re-analyze CSS selectors
-- **Source CRUD:** add/edit/delete sources, health status badges, dry-run preview
-- **AI CSS selector analysis:** one-click analysis for HTML-scraped sources (~$0.01/source via Anthropic API)
-- **"Fix with AI" banner:** prominent on broken/needs-setup source edit pages — one click to re-run AI analysis
-- **YouTube auto-detect:** paste a YouTube channel URL → auto-extracts channel ID, constructs RSS feed URL
-- **Bulk import:** paste multiple URLs with duplicate detection and validation preview
-- **Scrape run history:** `/admin/runs` — timestamps, article counts, errors per run
-- **FK constraint removed:** `articles.sourceId` has no FK — sources can be deleted without cascading to articles
+Sources, source health and scrape runs of this radar are managed in **Scrapyard** (the shared admin for all radars). Scrapyard reads and writes this database's `sources` table and reads `scrape_runs`, via its own `DATABASE_URL_EUDI` (same value as `DATABASE_URL` here). A `sources`/`scrape_runs` schema change here must be mirrored in `scrapyard/schemas/eudi.ts`.
 
 ## Pipeline
 
@@ -111,29 +99,8 @@ npm run db:studio                  # Drizzle Studio
 1. Load `/` — All Articles tab shows raw feed
 2. Click "Filtered" tab — shows EUDI-relevant articles only
 3. Click "Curated" tab — shows AI-scored articles with summaries
-4. Navigate to `/admin` — redirects to login
-5. Login with password — source list with health badges
-6. Check `/admin/runs` — scrape history visible
-7. Admin source table — filter by status, sort by columns, bulk select works
-8. Click a broken source → "Fix with AI" banner visible
-9. Visit `/newsletter` — subscribe page renders, form works
-10. **Newsletter:** the routine's `living-doc-update` response shows `newsletter.sent`; manual resend: `GET /api/newsletter/send` with `Authorization: Bearer <CRON_SECRET>`
-11. **Automated:** `node ~/.claude/scripts/ship.mjs / /filtered /curated /strategy /newsletter` (runs `scripts/check-ui-flows.mjs`: admin, Jev counts, 375 px overflow, Filtered)
+4. `/admin` answers 308 to Scrapyard
+5. Visit `/newsletter` — subscribe page renders, form works
+6. **Newsletter:** the routine's `living-doc-update` response shows `newsletter.sent`; manual resend: `GET /api/newsletter/send` with `Authorization: Bearer <CRON_SECRET>`
+7. **Automated:** `node ~/.claude/scripts/ship.mjs / /filtered /curated /strategy /newsletter` (runs `scripts/check-ui-flows.mjs`: /admin redirect, 375 px overflow, Filtered). Jev counts on the runs page are checked in Scrapyard.
 
-## Federated Admin (2026-04-17)
-
-Admin now serves multiple projects via a cookie-based connection router:
-
-- `selected_project_id` cookie (values: `"eudi"` | `"allekirjoitus"`, default `"eudi"`) controls which Neon database admin reads/writes.
-- `src/lib/db/connections.ts` → `getDbForProject(projectId)` returns the correct Drizzle client.
-- `src/lib/project-context.ts` → `getSelectedProject()` reads the cookie (server-side).
-- `app/admin/components/project-switcher.tsx` — client-side dropdown in admin chrome.
-- `src/db/schema-allekirjoitus.ts` — schema copy for type-safe queries against the Allekirjoitus Neon instance (separate Neon project, connection string in `DATABASE_URL_ALLEKIRJOITUS`).
-
-**Zero changes** to EUDI's worker, filter, curate, brief-update, or newsletter code paths. Admin UI stays visually identical (plain gray Tailwind).
-
-Projects sharing the admin:
-- `eudi` — this project (EUDI Wallet Tracker). Data in `DATABASE_URL` Neon instance.
-- `allekirjoitus` — Allekirjoitus Competitive Intel Tracker (separate repo `allekirjoitus-competitive-tracker`). Data in `DATABASE_URL_ALLEKIRJOITUS` Neon instance.
-
-See `../Allekirjoitus-benchmark-agent/docs/plans/2026-04-17-allekirjoitus-competitive-intel-tracker.md` for the full plan.
