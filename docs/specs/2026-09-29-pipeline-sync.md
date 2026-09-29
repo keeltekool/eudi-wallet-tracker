@@ -1,6 +1,6 @@
 # EUDI pipeline: simplify, then Jev filter — Spec
 
-**SPEC — complete (2026-09-29).** The build waits for the owner's explicit "go" on `docs/plans/2026-09-29-pipeline-sync.md`, which includes permanently deleting the 3 LCC loops and D5 (routine Brief patches). v2 added the simplification the owner asked for before any new build. The newsletter question below stays out of scope until the owner answers it.
+**SPEC — complete (2026-09-29).** The build waits for the owner's explicit "go" on `docs/plans/2026-09-29-pipeline-sync.md`, which includes permanently deleting the 3 LCC loops and D5 (routine Brief patches). v2 added the simplification the owner asked for before any new build. The owner said go on 2026-09-29 and answered the newsletter question (D8).
 
 ## Evidence this spec rests on
 - **Jev test F** (`Claude_Projects/jev/eval/eudi-filter.mjs`, results in jev `KNOWLEDGE.md` §11): the last 300 judged articles, the same fields the routine sees (title, source, 300-character excerpt).
@@ -42,9 +42,7 @@
 - **D5 Brief patches.** New Loop API op `brief-patch` replaces one `## ` section of the Brief by exact heading, after saving the previous Brief as `living_doc` row `bible-prev`. It refuses a heading not found exactly once, and an empty block or one under 30% of the old block's length.
 - **D6 Run counts.** New `scrape_runs.jev` jsonb `{relevant, irrelevant, duplicates, leftPending}` on /admin/runs.
 - **D7 Header** fits at 375 px on every public page.
-
-## Owner questions
-- **Newsletter:** it hasn't gone out automatically since 16.08 (its only trigger was the local script). There are 4 subscribers. Leave it off, or let the routine send it after the update (`/api/newsletter/send` already exists)?
+- **D8 Newsletter** (owner, 2026-09-29): every subscriber except egertv@gmail.com is deleted; `living-doc-update` sends the latest update to the active subscribers after writing it.
 
 ## Out of scope
 - The admin in this app is the **shared admin for several radars** (EUDI, Athlon and Allekirjoitus sources and runs), used on purpose. It stays untouched here, except the EUDI runs table (D6). Renaming and redoing it as a multi-app admin is a separate topic the owner wants after this build.

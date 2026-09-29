@@ -77,12 +77,17 @@
 - [ ] **Task 3.2 — `brief-patch`**
   - `app/api/loop/route.ts`: POST `{op:"brief-patch", heading, content}` → `{patched:true, heading}` or 400 `{error}`.
   - `loop/pipeline.md` Stage 2 applies NEW_FACT, UPDATED_FACT and RESOLVED_QUESTION changes through it.
+- [ ] **Task 3.3 — Newsletter (D8, owner answer 2026-09-29)**
+  - Neon: back up `newsletter_subscribers` to a local file outside the repo, then delete every row except `egertv@gmail.com`.
+  - `src/lib/newsletter.ts`: move the send logic out of `app/api/newsletter/send/route.ts` into `sendLatestUpdate()`; the route keeps its `CRON_SECRET` auth and calls it.
+  - `app/api/loop/route.ts`: `living-doc-update` calls `sendLatestUpdate()` after the insert and returns its `{sent, total, errors}`; a send failure doesn't fail the insert.
 
 **Gate 3:** real calls to the deployed app with the Loop token:
 - a missing heading → 400;
 - a truncated block → 400;
 - a same-content patch → 200, with `bible` unchanged and `bible-prev` saved;
 - `op=living-doc&since=<7 days>` includes the 23.09 accepted articles the old filter missed.
+- Neon `newsletter_subscribers` holds only `egertv@gmail.com`.
 
 ## Phase 4 — Admin and header
 - [ ] **Task 4.1** — `app/admin/runs/_components/eudi-runs-view.tsx`: Jev columns (relevant, irrelevant, duplicates, left pending), "—" on older runs.
@@ -100,6 +105,7 @@
   - curation follows `loop/pipeline.md`;
   - the update includes all articles accepted since the last run;
   - `brief-patch` is used when the Brief changes;
+  - the `living-doc-update` response shows `sent: 1`, and the newsletter arrives at egertv@gmail.com;
   - Radar-Check gets `ok`.
 - [ ] **Task 5.2** — Docs:
   - EUDI `STACK.md` (pipeline, Jev, rollback, no Drive copy);
@@ -118,4 +124,4 @@
 - Rules drift again → only `loop/pipeline.md` and the Jev question hold the scope; Gate 1's grep.
 
 ## Out of scope
-Renaming or redoing the shared radar admin (a separate topic after this build); unfetchable Google News bodies; Jev for curation, categories or summaries; the newsletter until the owner answers the spec's question.
+Renaming or redoing the shared radar admin (a separate topic after this build); unfetchable Google News bodies; Jev for curation, categories or summaries.
