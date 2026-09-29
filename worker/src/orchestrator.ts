@@ -1,11 +1,14 @@
-import { eq } from "drizzle-orm";
-import { sources, scrapeRuns } from "../../src/db/schema";
+import { desc, eq, gt } from "drizzle-orm";
+import { articles, sources, scrapeRuns } from "../../src/db/schema";
 import type { ScrapeError } from "../../src/db/schema";
 import type { Database } from "../../src/db/index";
+import { titleKey } from "../../src/lib/title-key";
 import { parseSource } from "./parsers/index";
 import { deduplicateAndStore } from "./store";
+import { filterPending } from "./jev-filter";
 
-export async function runScrape(db: Database): Promise<void> {
+/** typesafeKey absent → articles stay pending for the routine's Stage 0 (the rollback path). */
+export async function runScrape(db: Database, typesafeKey?: string): Promise<void> {
   console.log(`[scrape] Starting scrape run at ${new Date().toISOString()}`);
 
   // 1. Create scrape run record
@@ -15,10 +18,20 @@ export async function runScrape(db: Database): Promise<void> {
     .returning({ id: scrapeRuns.id });
 
   let totalArticles = 0;
+  let sameStory = 0;
   let sourcesScraped = 0;
   const errors: ScrapeError[] = [];
 
   try {
+    // Same-story keys of the last 4 days; newest first, so the map ends up pointing at the oldest copy
+    const recentRows = await db
+      .select({ id: articles.id, title: articles.title })
+      .from(articles)
+      .where(gt(articles.scrapedAt, new Date(Date.now() - 4 * 86_400_000)))
+      .orderBy(desc(articles.id));
+    const recent = new Map(recentRows.map((a) => [titleKey(a.title), a.id]));
+    recent.delete("");
+
     // 2. Load active sources
     const activeSources = await db
       .select()
@@ -53,12 +66,14 @@ export async function runScrape(db: Database): Promise<void> {
           const storeResult = await deduplicateAndStore(
             db,
             source.id,
-            result.articles
+            result.articles,
+            recent
           );
           console.log(
-            `[scrape] ${source.name}: ${storeResult.inserted} new, ${storeResult.duplicates} dupes, ${storeResult.invalid} invalid`
+            `[scrape] ${source.name}: ${storeResult.inserted} new, ${storeResult.sameStory} same story, ${storeResult.duplicates} dupes, ${storeResult.invalid} invalid`
           );
           totalArticles += storeResult.inserted;
+          sameStory += storeResult.sameStory;
         } else if (result.errors.length === 0) {
           console.log(`[scrape] ${source.name}: 0 articles found`);
         }
@@ -87,7 +102,10 @@ export async function runScrape(db: Database): Promise<void> {
       }
     }
 
-    // 4. Mark run as complete
+    // 4. Jev sorts every pending article (never throws; failures leave articles pending)
+    const jev = await filterPending(db, typesafeKey);
+
+    // 5. Mark run as complete
     await db
       .update(scrapeRuns)
       .set({
@@ -97,6 +115,7 @@ export async function runScrape(db: Database): Promise<void> {
         sourcesScraped,
         articlesFound: totalArticles,
         errors,
+        jev: { ...jev, duplicates: sameStory },
       })
       .where(eq(scrapeRuns.id, run.id));
 

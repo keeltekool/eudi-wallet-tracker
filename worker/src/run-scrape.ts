@@ -3,7 +3,6 @@ config({ path: "../.env.local" });
 
 import { createDb } from "../../src/db/index";
 import { runScrape } from "./orchestrator";
-import { filterPending } from "./jev-filter";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -13,8 +12,7 @@ if (!DATABASE_URL) {
 
 async function main() {
   const db = createDb(DATABASE_URL!);
-  await runScrape(db);
-  await filterPending(db, process.env.TYPESAFE_API_KEY); // absent key → the routine's filter stage (rollback path)
+  await runScrape(db, process.env.TYPESAFE_API_KEY); // absent key → the routine's Stage 0 sorts (rollback path)
   console.log("Manual scrape complete.");
   process.exit(0);
 }

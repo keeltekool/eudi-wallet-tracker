@@ -73,6 +73,7 @@ export const articles = pgTable(
     status: articleStatusEnum("status").notNull().default("pending"),
     rejectionReason: text("rejection_reason"),
     jevScore: real("jev_score"), // Jev relevance filter score (worker/src/jev-filter.ts); null = judged by the routine
+    curatedAt: timestamp("curated_at", { withTimezone: true }), // set by the Loop API's curation-decisions
   },
   (table) => [uniqueIndex("articles_url_hash_idx").on(table.urlHash)]
 );
@@ -89,6 +90,7 @@ export const scrapeRuns = pgTable("scrape_runs", {
   sourcesScraped: integer("sources_scraped").default(0),
   articlesFound: integer("articles_found").default(0),
   errors: jsonb("errors").$type<ScrapeError[]>().default([]),
+  jev: jsonb("jev").$type<JevRunCounts>(), // null on runs before the Jev filter
 });
 
 // ── Living Doc ────────────────────────────────────
@@ -116,6 +118,13 @@ export const newsletterSubscribers = pgTable("newsletter_subscribers", {
 });
 
 // ── Types ──────────────────────────────────────────
+
+export type JevRunCounts = {
+  relevant: number;
+  irrelevant: number;
+  duplicates: number;
+  leftPending: number;
+};
 
 export type SourceConfig = {
   feedUrl?: string;

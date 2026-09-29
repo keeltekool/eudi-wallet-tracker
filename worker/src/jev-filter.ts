@@ -8,6 +8,7 @@
  */
 import { and, desc, eq } from "drizzle-orm";
 import { articles, sources } from "../../src/db/schema";
+import type { JevRunCounts } from "../../src/db/schema";
 import type { Database } from "../../src/db/index";
 
 const API = "https://api.typesafe.ai/v1/systemone";
@@ -60,11 +61,7 @@ export async function jevScore(apiKey: string, a: FilterArticle): Promise<number
 }
 
 /** Marks every pending article relevant or irrelevant. Never throws: a failure leaves articles pending. */
-export async function filterPending(db: Database, apiKey: string | undefined): Promise<void> {
-  if (!apiKey) {
-    console.log("[jev] TYPESAFE_API_KEY not set: pending articles are left for the routine's filter stage");
-    return;
-  }
+export async function filterPending(db: Database, apiKey?: string): Promise<Omit<JevRunCounts, "duplicates">> {
   const queue = await db
     .select({ id: articles.id, title: articles.title, fullText: articles.fullText, source: sources.name })
     .from(articles)
@@ -72,6 +69,10 @@ export async function filterPending(db: Database, apiKey: string | undefined): P
     .where(eq(articles.status, "pending"))
     .orderBy(desc(articles.scrapedAt));
   const total = queue.length;
+  if (!apiKey) {
+    console.log(`[jev] TYPESAFE_API_KEY not set: ${total} pending articles left for the routine's Stage 0`);
+    return { relevant: 0, irrelevant: 0, leftPending: total };
+  }
   let relevant = 0;
   let irrelevant = 0;
   // A null already means 4 failed attempts, so treat Jev as down for the rest of the run instead of paying the
@@ -101,7 +102,8 @@ export async function filterPending(db: Database, apiKey: string | undefined): P
     console.error(`[jev] filter stopped: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  const left = total - relevant - irrelevant;
-  if (left > 0) console.log(`::warning::Jev filter failed; ${left} of ${total} articles left pending for the routine`);
-  console.log(`[jev] ${total} pending: ${relevant} relevant, ${irrelevant} irrelevant, ${left} left pending`);
+  const leftPending = total - relevant - irrelevant;
+  if (leftPending > 0) console.log(`::warning::Jev filter failed; ${leftPending} of ${total} articles left pending for the routine`);
+  console.log(`[jev] ${total} pending: ${relevant} relevant, ${irrelevant} irrelevant, ${leftPending} left pending`);
+  return { relevant, irrelevant, leftPending };
 }
