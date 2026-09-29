@@ -22,12 +22,17 @@
     - Stage 3: Radar-Check report, error handling and the summary line.
 - [ ] **Task 1.2 — Live routine prompt**
   - RemoteTrigger `get`, then `update` of `trig_01GjY2dYsjf58CnEJPNyrRK9`: keep the setup block with both tokens, the never-print rule and the Radar-Check call; everything else becomes "read and follow `loop/pipeline.md` from the checkout".
-- [ ] **Task 1.3 — Delete dead code and prompts**
+- [ ] **Task 1.3 — Delete dead code and prompts**, in one commit of its own, so it reverts on its own.
   - `loop/filter-prompt.md`, `loop/curate-prompt.md`.
   - `worker/src/filter.ts`, `update-filter.ts`, `curate.ts`, `update-articles.ts`, `living-doc-articles.ts`, `update-living-doc.ts`, `seed-bible.ts`.
-  - `STACK.md` references to them.
+  - The tracked junk file `tmp-snapshot.txt`, and the untracked `deploy-verify-*.png` leftovers.
+  - `STACK.md` references to all of them.
+  - Before deleting: `grep` proves nothing outside `docs/plans/` history references a file. After: `tsc` and `next build` are clean.
+  - The dated files in `docs/plans/` stay as history.
 - [ ] **Task 1.4 — Delete the 3 LCC loops**
   - eudi-relevance, eudi-curation, eudi-livingdoc, via the LCC API. The owner approves the delete with this plan.
+  - First their full JSON is saved to a local backup file, outside the public repo.
+  - The same goes for the live routine prompt before Task 1.2 changes it: it holds tokens, so its backup stays local only.
 - [ ] **Task 1.5 — Proof run**
   - RemoteTrigger `run` after 1.1–1.4 are pushed, then `get_run_log`:
     - the routine reads `loop/pipeline.md`;
