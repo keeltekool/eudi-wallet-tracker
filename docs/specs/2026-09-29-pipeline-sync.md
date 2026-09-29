@@ -47,6 +47,6 @@
 - **Newsletter:** it hasn't gone out automatically since 16.08 (its only trigger was the local script). There are 4 subscribers. Leave it off, or let the routine send it after the update (`/api/newsletter/send` already exists)?
 
 ## Out of scope
-- Athlon and Allekirjoitus admin views hosted in this app (a separate cleanup).
+- The admin in this app is the **shared admin for several radars** (EUDI, Athlon and Allekirjoitus sources and runs), used on purpose. It stays untouched here, except the EUDI runs table (D6). Renaming and redoing it as a multi-app admin is a separate topic the owner wants after this build.
 - Unfetchable Google News bodies.
 - Jev for curation, categories or summaries (evidence against, KNOWLEDGE.md §0 pre-flight).

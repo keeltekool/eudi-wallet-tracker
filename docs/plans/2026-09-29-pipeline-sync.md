@@ -29,6 +29,7 @@
   - `STACK.md` references to all of them.
   - Before deleting: `grep` proves nothing outside `docs/plans/` history references a file. After: `tsc` and `next build` are clean.
   - The dated files in `docs/plans/` stay as history.
+  - **Guard:** delete only the files listed here. The shared radar admin (`app/admin/**`, `app/api/athlon/**`, `app/api/sources/**`, `app/api/runs/**`) and the other radars' schemas and env vars (`schema-idearadar.ts`, `schema-eewatch.ts`, `DATABASE_URL_ATHLON` / `_ALLEKIRJOITUS` / `_IDEARADAR` / `_EEWATCH`) are in use and stay.
 - [ ] **Task 1.4 — Delete the 3 LCC loops**
   - eudi-relevance, eudi-curation, eudi-livingdoc, via the LCC API. The owner approves the delete with this plan.
   - First their full JSON is saved to a local backup file, outside the public repo.
@@ -117,4 +118,4 @@
 - Rules drift again → only `loop/pipeline.md` and the Jev question hold the scope; Gate 1's grep.
 
 ## Out of scope
-Athlon and Allekirjoitus admin views in this app; unfetchable Google News bodies; Jev for curation, categories or summaries; the newsletter until the owner answers the spec's question.
+Renaming or redoing the shared radar admin (a separate topic after this build); unfetchable Google News bodies; Jev for curation, categories or summaries; the newsletter until the owner answers the spec's question.
