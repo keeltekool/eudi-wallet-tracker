@@ -105,21 +105,21 @@
 **Gate 4 — PASSED 2026-09-29** (ship.mjs 513ab34: verify-deploy 10/10, check-ui-flows all passed at 375 and 1440):** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
 
 ## Phase 5 — End to end and docs
-- [ ] **Task 5.1** — RemoteTrigger `run` plus `get_run_log`:
+- [x] **Task 5.1** (2026-09-29, session cse_01FGs6v6jXdurmvEw9J4cdah: Stage 0 found 0 pending; 39 curated, 10 accepted; since=last-update returned 23; brief-patch on 8 sections; update #35 with 22 items; Radar-Check 201. The run's newsletter failed: Vercel's RESEND_API_KEY began with a BOM since the 12.09 Resend migration. Re-set without it; `/api/newsletter/send`, which runs the same `sendLatestUpdate()`, then returned sent 1, errors 0) — RemoteTrigger `run` plus `get_run_log`:
   - Stage 0 finds 0 pending;
   - curation follows `loop/pipeline.md`;
   - the update includes all articles accepted since the last run;
   - `brief-patch` is used when the Brief changes;
   - the `living-doc-update` response shows `sent: 1`, and the newsletter arrives at egertv@gmail.com;
   - Radar-Check gets `ok`.
-- [ ] **Task 5.2** — Docs:
+- [x] **Task 5.2** — Docs:
   - EUDI `STACK.md` (pipeline, Jev, rollback, no Drive copy);
   - memory `project_eudi_wallet_tracker.md`, and EUDI moves to Active in MEMORY.md;
   - global `STACK.md` (TypeSafe row);
   - Jev `KNOWLEDGE.md` (§10, §11 live entry, §15, and the correction that subscription routines spend plan capacity, not "$0");
   - a per-run measure step in `jev/eval/`.
 
-- [ ] **Task 5.3 — code-reviewer fixes (2026-09-29)**
+- [x] **Task 5.3 — code-reviewer fixes (2026-09-29)**
   - `titleKey` returns "" under 25 characters: bare release tags (`v0.9.1`: 10 colliding keys in Neon) and short blog titles never mark a same-story duplicate.
   - Aggregator sources (news.google.com, rss.app) scrape last, so the direct publisher's copy with a body is the one kept.
   - Same-story copies are stored `irrelevant` (reason "Duplicate of #id"), not `rejected` (/simplify altitude): `irrelevant` is final and already hidden from /filtered, so no special-case query; the 22 rows from 29.09 are moved over; All articles still shows them.
@@ -129,7 +129,7 @@
   - Minor: `jevScore` returns null for a non-numeric answer; the worker pool uses `allSettled` so counts stay exact; `/api/favicon` caches only Google's 200/404 and answers anything else or a network error with a transparent 1×1 GIF; `check-ui-flows` pins `timezoneId: Europe/Tallinn`.
   - Not changed: one per-article 4xx switches Jev off for the run (the planned run-level switch; Stage 0 sorts leftovers); the 2-hour `bible-prev` window (documented in code).
 
-**Gate 5:** the run log facts above, plus a Neon update row dated today. Then `code-reviewer`, `/simplify`, final ship.mjs, `/wrap-up`.
+**Gate 5 — PASSED 2026-09-29** (run log facts above; Neon update #35 dated today; ship.mjs 261d31a PASS):** the run log facts above, plus a Neon update row dated today. Then `code-reviewer`, `/simplify`, final ship.mjs, `/wrap-up`.
 
 ## Deviations (2026-09-29, build session)
 - **Order:** Phases 2–4 were coded on branch `pipeline-sync` while Gate 1's run and the TypeSafe key were pending. Gates still run in order, and a phase is ticked only after its gate. Phase 2 code without the key is the rollback path (everything stays pending, Stage 0 sorts), so it can ship before Gate 2.

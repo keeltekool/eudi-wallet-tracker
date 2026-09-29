@@ -97,6 +97,7 @@ npm run db:studio                  # Drizzle Studio
 | Routine prompt carried its own pasted copy of the rules; repo prompt edits never reached it (2026-09-11 → 29) | The prompt now only points at `loop/pipeline.md`; after a rules change, read the routine back with RemoteTrigger `get` |
 | `npx tsx` in `worker/src` runs from the workspace folder | Call `../../node_modules/.bin/tsx check-jev-filter.ts` |
 | `.env.local` has a BOM: `process.loadEnvFile` silently fails | Use dotenv (`config({ path })`) in every script |
+| Vercel `RESEND_API_KEY` carried a BOM from 12.09 to 29.09: every send failed with "Cannot convert argument to a ByteString … 65279" | Set Vercel env vars from a no-BOM temp file with `cmd <` (memory `feedback_vercel_env_no_powershell_pipe`); check with `vercel env pull` + length |
 | Google's favicon service 404s (with a globe image) for icon-less sites → console errors, ship.mjs fails | Cards load `/api/favicon?domain=`, which passes the image through with 200 |
 | Cloud sandbox has no `gh` CLI; raw api.github.com org-blocked | Use GitHub MCP tools in routine prompts; git clone/push still work |
 | Cloud env vars are environment-WIDE and forbid secrets (UI warning) | Never put credentials there — use token-guarded app endpoints (`/api/loop` pattern, `LOOP_TOKEN` in Vercel) |
