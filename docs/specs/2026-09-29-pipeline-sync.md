@@ -1,6 +1,15 @@
 # EUDI pipeline: simplify, then Jev filter — Spec
 
-Status: DRAFT v2, waiting for the owner's go (2026-09-29). v2 adds the simplification the owner asked for before any new build.
+**SPEC — complete (2026-09-29).** The build waits for the owner's explicit "go" on `docs/plans/2026-09-29-pipeline-sync.md`, which includes permanently deleting the 3 LCC loops and D5 (routine Brief patches). v2 added the simplification the owner asked for before any new build. The newsletter question below stays out of scope until the owner answers it.
+
+## Evidence this spec rests on
+- **Jev test F** (`Claude_Projects/jev/eval/eudi-filter.mjs`, results in jev `KNOWLEDGE.md` §11): the last 300 judged articles, the same fields the routine sees (title, source, 300-character excerpt).
+  - Variant B at cut 0.05: drops 43 of 73 real off-topic articles, keeps 34 of 35 that made the brief (it loses "US launches Quantum Readiness Task Force"), and keeps 57 of 59 copies of stories passed elsewhere. $0.01 per 300 articles; p50 260 ms.
+  - Opus's own filter labels are noisy. Stage 1 lists relevant ids per 100-article batch, so everything unlisted defaults to irrelevant.
+- **The live routine** (RemoteTrigger `get`, 2026-09-29): its Stage 1 and Stage 2 lists are the pre-11.09 version, and its prompt holds the Loop and Radar-Check tokens.
+- **The 23.09 run log** (session `cse_01P8Sw5e87HcuNsnnVfgeXJ9`): 277 filtered in 3 rounds (Stage 1 ≈ 3 of 10.5 minutes), 104 curated with 22 accepted, and 8 living-doc items. The run itself flagged that `since` keys on scrape time and dropped the Estonia item.
+- **Loop Control Center:** the EUDI loop prompts were last updated 2026-04-03.
+- **Neon:** the `bible` row's `run_date` is 2026-07-08, and Section 12 is present.
 
 ## Why
 1. **Dead machinery confuses.** Since 2026-08-16 the weekly cloud routine runs the whole pipeline. Still present and unused:
