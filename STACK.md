@@ -9,7 +9,7 @@
 | **Neon** | Postgres DB (sources, articles, scrape_runs) | `DATABASE_URL` |
 | **Vercel** | Next.js dashboard + admin hosting + Loop API | `LOOP_TOKEN` (scoped auth for `/api/loop`) |
 | **GitHub Actions** | Twice-weekly scraper (Wed+Sat 06:00 UTC) + Jev filter | `DATABASE_URL`, `TYPESAFE_API_KEY` (GH secrets) |
-| **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5, follows `loop/pipeline.md` via the Loop API | Loop + Radar-Check tokens in the routine prompt only |
+| **Anthropic RemoteTrigger** | `EUDI Pipeline` cloud routine (`trig_01GjY2dYsjf58CnEJPNyrRK9`) — Wed 06:30 Tallinn, Opus 5.5 (`claude-opus-5-5` since 29.09), follows `loop/pipeline.md` via the Loop API | Loop + Radar-Check tokens in the routine prompt only |
 | **TypeSafe AI (Jev)** | Relevance filter at scrape time (`worker/src/jev-filter.ts`, `jev-1.13.0`, cut 0.05), key `eudi-wallet-tracker` | `TYPESAFE_API_KEY` |
 | **Anthropic API** | One-off CSS selector analysis, `claude-sonnet-5-5` with `thinking: between_tools` (~$0.03/source est.; Sonnet 4 retired 15.06.2026 broke it until 28.09.2026) | `ANTHROPIC_API_KEY` |
 | **Resend** | Newsletter: sent by `living-doc-update` after each weekly update (1 subscriber) | `RESEND_API_KEY`, `CRON_SECRET` (manual send) |
@@ -50,7 +50,7 @@ Scrape job (GitHub Actions, Wed+Sat 06:00 UTC)
   → store; a copy of a story scraped in the last 4 days → rejected "Duplicate of #id"
   → Jev sorts every pending article relevant/irrelevant (score in articles.jev_score,
     counts in scrape_runs.jev); Jev down → articles stay pending
-Weekly routine "EUDI Pipeline" (Wed 06:30 Tallinn, Opus 5, spends plan capacity):
+Weekly routine "EUDI Pipeline" (Wed 06:30 Tallinn, Opus 5.5, spends plan capacity):
   prompt = tokens + "follow loop/pipeline.md" (the only copy of scope and rubric)
   0. safety net: sort anything still pending   1. curate (score >= 8, summaries)
   2. update log since the last update + brief-patch Brief sections + newsletter
