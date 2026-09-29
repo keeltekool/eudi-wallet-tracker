@@ -119,11 +119,24 @@ Format, one block per Brief section touched, using the Brief's exact section hea
 Every item carries a `→ Source:` link. Refer to the main document as "the Strategy Brief", never "bible".
 If nothing is new, the content is: `No significant new intelligence this cycle. N articles reviewed, all covered by existing Strategy Brief content.`
 
-Write it every run, even when nothing is new:
+### Apply Brief changes
+For every NEW_FACT, UPDATED_FACT and RESOLVED_QUESTION item, change the Strategy Brief itself, one `## ` section at a time:
+- Edit surgically: add the new fact, replace an updated fact (keep the old value in brackets, e.g. "(was: Q3 2026)"), move a resolved open question's answer into the section body. Never rewrite a section with nothing new; DEEPENED_INSIGHT items go in the log only.
+- Add one line per changed section to the Brief's `## Changelog` section: `- <YYYY-MM-DD>: <Section name>: <what changed>`.
+- Send each changed section's full new body (everything under its heading, without the heading line):
+```bash
+# body: {"op":"brief-patch","heading":"## Section 7: European Business Wallet","content":"<the section's full new body>"}
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" -d @/tmp/brief-patch.json "$API"
+```
+`{"patched":true}` means it's written; the run's first patch saves the Brief as it was as `bible-prev`. A 400 means the heading didn't match exactly one line, or the body is under 30% of the old one: fix the request, don't shorten a section to get around it.
+
+### Write the log
+The content starts straight with the first `### Section` block; `/strategy` prints the date header itself. Write it every run, even when nothing is new:
 ```bash
 # body: {"op":"living-doc-update","update":{"content":"<markdown>","runDate":"<ISO now>","articlesProcessed":N,"sectionsTouched":["Section 7: European Business Wallet"]}}
 curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" -d @/tmp/living-doc-update.json "$API"
 ```
+The same call emails the update to the newsletter subscribers: check `newsletter.sent` in the response. `sent: 0` with an error is worth a line in the closing message, not a failed run.
 
 ## Stage 3 — Radar-Check report
 
@@ -135,4 +148,4 @@ Always the last action, including early stops and failures: the Radar-Check call
 - Everything succeeds → no issue. Silence means success.
 
 ## Closing line
-`Sorted S (R relevant/I irrelevant) · curated C (A accepted/J rejected) · update: U items — all written.`
+`Sorted S (R relevant/I irrelevant) · curated C (A accepted/J rejected) · update: U items · Brief: B sections patched · newsletter: N sent — all written.`

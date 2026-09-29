@@ -1,7 +1,8 @@
 import { db } from "@/src/db/client";
 import { articles, sources, livingDoc } from "@/src/db/schema";
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { sendLatestUpdate } from "@/src/lib/newsletter";
 
 /**
  * Loop API — token-guarded endpoints for the EUDI Pipeline cloud routine.
@@ -92,7 +93,8 @@ export async function GET(req: Request) {
     if (op === "living-doc") {
       const since = url.searchParams.get("since");
       const conditions = [eq(articles.status, "accepted")];
-      if (since) conditions.push(gt(articles.scrapedAt, new Date(since)));
+      // Curation time, not scrape time: an article scraped before `since` but accepted after it still counts
+      if (since) conditions.push(sql`coalesce(${articles.curatedAt}, ${articles.scrapedAt}) > ${new Date(since)}`);
       const accepted = await db
         .select({
           id: articles.id,
@@ -163,6 +165,7 @@ export async function POST(req: Request) {
               relevanceScore: d.relevanceScore,
               summary: d.summary || null,
               categories: d.categories || [],
+              curatedAt: new Date(),
             })
             .where(eq(articles.id, d.id));
           accepted++;
@@ -173,6 +176,7 @@ export async function POST(req: Request) {
               status: "rejected",
               relevanceScore: d.relevanceScore,
               rejectionReason: d.rejectionReason || "Below relevance threshold",
+              curatedAt: new Date(),
             })
             .where(eq(articles.id, d.id));
           rejected++;
@@ -193,8 +197,48 @@ export async function POST(req: Request) {
         articlesProcessed: u.articlesProcessed ?? 0,
         sectionsTouched: u.sectionsTouched ?? [],
       });
-      // ponytail: newsletter trigger omitted — wire /api/newsletter/send here when subscribers exist
-      return NextResponse.json({ inserted: true });
+      // A failed send must not fail the update write
+      const newsletter = await sendLatestUpdate().catch((err) => ({ sent: 0, error: String(err) }));
+      return NextResponse.json({ inserted: true, newsletter });
+    }
+
+    if (op === "brief-patch") {
+      // Replaces one "## " section of the Strategy Brief; the previous Brief is kept as row "bible-prev"
+      const heading = String(body.heading ?? "").trim();
+      const content = String(body.content ?? "").trim();
+      const [bible] = await db.select().from(livingDoc).where(eq(livingDoc.section, "bible")).limit(1);
+      if (!bible) return NextResponse.json({ error: "Bible not found" }, { status: 404 });
+
+      const lines = bible.content.split("\n");
+      const hits = lines.flatMap((l, i) => (l.trim() === heading ? [i] : []));
+      if (!heading.startsWith("## ") || hits.length !== 1) {
+        return NextResponse.json({ error: `heading must match one "## " line exactly; found ${hits.length}` }, { status: 400 });
+      }
+      const start = hits[0] + 1;
+      const next = lines.findIndex((l, i) => i >= start && l.startsWith("## "));
+      const end = next === -1 ? lines.length : next;
+      const rawBlock = lines.slice(start, end).join("\n");
+      const oldBlock = rawBlock.trim();
+      if (!content || content.length < oldBlock.length * 0.3) {
+        return NextResponse.json(
+          { error: `content is ${content.length} chars; the old block is ${oldBlock.length}, minimum is 30%` },
+          { status: 400 }
+        );
+      }
+
+      // bible-prev = the Brief before this run's first patch. ponytail: "this run" = patched in the last 2 hours
+      const patchedThisRun = bible.runDate && Date.now() - bible.runDate.getTime() < 2 * 3600_000;
+      if (!patchedThisRun) {
+        const [prev] = await db.select({ id: livingDoc.id }).from(livingDoc).where(eq(livingDoc.section, "bible-prev")).limit(1);
+        if (prev) await db.update(livingDoc).set({ content: bible.content, runDate: bible.runDate }).where(eq(livingDoc.id, prev.id));
+        else await db.insert(livingDoc).values({ section: "bible-prev", content: bible.content, runDate: bible.runDate });
+      }
+
+      // Swap only the trimmed text so the blank lines around it stay as they were (function replacer: no $ patterns)
+      const newBlock = rawBlock.replace(oldBlock, () => content);
+      const patched = [...lines.slice(0, start), newBlock, ...lines.slice(end)].join("\n");
+      await db.update(livingDoc).set({ content: patched, runDate: new Date() }).where(eq(livingDoc.id, bible.id));
+      return NextResponse.json({ patched: true, heading });
     }
 
     return NextResponse.json({ error: `Unknown op: ${op}` }, { status: 400 });
