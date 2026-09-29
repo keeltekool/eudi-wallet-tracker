@@ -14,7 +14,8 @@ type StoreResult = {
 
 /**
  * `recent` maps titleKey → article id for everything scraped in the last 4 days (see runScrape). A new article
- * whose key is already there is stored as `rejected`, "Duplicate of #<id>", so it never reaches Jev or curation.
+ * whose key is already there is stored as `irrelevant`, "Duplicate of #<id>": final, so it never reaches Jev,
+ * curation or /filtered, and All articles still lists it.
  */
 export async function deduplicateAndStore(
   db: Database,
@@ -51,7 +52,7 @@ export async function deduplicateAndStore(
           author: raw.author,
           publishedAt: raw.publishedAt,
           fullText: raw.fullText,
-          status: originalId ? "rejected" : "pending",
+          status: originalId ? "irrelevant" : "pending",
           rejectionReason: originalId ? `Duplicate of #${originalId}` : null,
         })
         .onConflictDoNothing({ target: articles.urlHash })

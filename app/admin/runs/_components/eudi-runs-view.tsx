@@ -7,6 +7,14 @@ import type { ScrapeError } from "@/src/db/schema";
 /**
  * EUDI runs history view — preserves the original runs page verbatim.
  */
+// Jev filter counts (scrape_runs.jev); check-ui-flows reads these cells by position
+const JEV_COLUMNS = [
+  ["relevant", "Relevant"],
+  ["irrelevant", "Irrelevant"],
+  ["duplicates", "Duplicates"],
+  ["leftPending", "Left pending"],
+] as const;
+
 export async function EudiRunsView() {
   const runs = await db
     .select()
@@ -47,9 +55,9 @@ export async function EudiRunsView() {
                   <th className="text-right px-4 py-3 font-medium text-gray-500">
                     Errors
                   </th>
-                  {["Relevant", "Irrelevant", "Duplicates", "Left pending"].map((h) => (
-                    <th key={h} className="text-right px-4 py-3 font-medium text-gray-500" title="Jev filter">
-                      {h}
+                  {JEV_COLUMNS.map(([k, label]) => (
+                    <th key={k} className="text-right px-4 py-3 font-medium text-gray-500" title="Jev filter">
+                      {label}
                     </th>
                   ))}
                   <th className="text-right px-4 py-3 font-medium text-gray-500">
@@ -116,7 +124,7 @@ export async function EudiRunsView() {
                           "0"
                         )}
                       </td>
-                      {(["relevant", "irrelevant", "duplicates", "leftPending"] as const).map((k) => (
+                      {JEV_COLUMNS.map(([k]) => (
                         <td key={k} className="px-4 py-3 text-right font-mono text-gray-600">
                           {run.jev ? run.jev[k] : "—"}
                         </td>

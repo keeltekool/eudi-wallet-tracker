@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import {
   RawArticleCard,
   CuratedArticleCard,
+  TIME_ZONE,
   type Article,
 } from "./article-card";
 
@@ -12,24 +13,15 @@ type Props = {
   variant: "raw" | "curated";
 };
 
-// One fixed zone, so the server (UTC) and the browser render the same day and text (no hydration mismatch)
-const TIME_ZONE = "Europe/Tallinn";
+const cycleDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: TIME_ZONE });
+const cycleKey = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }); // YYYY-MM-DD
 
 function formatCycleDate(date: Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: TIME_ZONE,
-  });
+  return cycleDate.format(new Date(date));
 }
 
 function getCycleKey(article: Article): string {
-  const date = article.publishedAt
-    ? new Date(article.publishedAt)
-    : new Date(article.scrapedAt);
-  return date.toLocaleDateString("en-CA", { timeZone: TIME_ZONE }); // YYYY-MM-DD
+  return cycleKey.format(new Date(article.publishedAt ?? article.scrapedAt));
 }
 
 export function Feed({ articles, variant }: Props) {

@@ -30,7 +30,6 @@ export async function runScrape(db: Database, typesafeKey?: string): Promise<voi
       .where(gt(articles.scrapedAt, new Date(Date.now() - 4 * 86_400_000)))
       .orderBy(desc(articles.id));
     const recent = new Map(recentRows.map((a) => [titleKey(a.title), a.id]));
-    recent.delete("");
 
     // 2. Load active sources; aggregators last, so a story's first (kept) copy is the publisher's own, with a body
     const activeSources = await db

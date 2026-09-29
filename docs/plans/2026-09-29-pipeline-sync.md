@@ -6,7 +6,7 @@
 
 ## Global constraints
 - Jev: model `jev-1.13.0`, question = test F variant B, cut `0.05`, 8 s timeout, 4 attempts, 5 workers, run-level switch after the first null. Question, model and cut change only together, re-fitted with `Claude_Projects/jev/eval/eudi-filter.mjs`.
-- Duplicates: the normalised title (lower-case, trailing " - Source" removed, non-alphanumerics stripped, first 60 characters) equals one scraped in the previous 4 days → `rejected`, `Duplicate of #<id>`.
+- Duplicates: the normalised title (lower-case, trailing " - Source" removed, non-alphanumerics stripped, first 60 characters) equals one scraped in the previous 4 days → `irrelevant` (was `rejected` until Task 5.3), `Duplicate of #<id>`.
 - `brief-patch`: the heading is found exactly once; the new block is non-empty and ≥ 30% of the old block's length; `bible-prev` is written first.
 - `loop/pipeline.md` is in a public repo: no tokens in it. The claude.ai prompt holds the Loop token and the Radar-Check token, as today.
 - DB changes are additive (`ALTER TABLE … ADD COLUMN IF NOT EXISTS`); no `drizzle-kit push`.
@@ -122,7 +122,8 @@
 - [ ] **Task 5.3 — code-reviewer fixes (2026-09-29)**
   - `titleKey` returns "" under 25 characters: bare release tags (`v0.9.1`: 10 colliding keys in Neon) and short blog titles never mark a same-story duplicate.
   - Aggregator sources (news.google.com, rss.app) scrape last, so the direct publisher's copy with a body is the one kept.
-  - /filtered hides scrape-time duplicates (`rejected`, no `relevance_score`, "Duplicate of #"); they stay visible on All articles.
+  - Same-story copies are stored `irrelevant` (reason "Duplicate of #id"), not `rejected` (/simplify altitude): `irrelevant` is final and already hidden from /filtered, so no special-case query; the 22 rows from 29.09 are moved over; All articles still shows them.
+  - /simplify: one `latestUpdate()` helper for both newsletter sends; one exported `TIME_ZONE` and module-level `Intl.DateTimeFormat`s (~145 ms → ~3 ms per 500 cards); Jev reads only the 300-char excerpt; runs view columns from one list.
   - `since=last-update` uses the update row's server-set `created_at`, not the routine-written `run_date`.
   - `brief-patch` refuses content with a `#`/`##` heading line, and converts content to the Brief's line endings (CRLF).
   - Minor: `jevScore` returns null for a non-numeric answer; the worker pool uses `allSettled` so counts stay exact; `/api/favicon` caches only Google's 200/404 and answers anything else or a network error with a transparent 1×1 GIF; `check-ui-flows` pins `timezoneId: Europe/Tallinn`.

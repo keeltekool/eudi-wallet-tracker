@@ -33,14 +33,14 @@ function getFaviconUrl(articleUrl: string): string {
   }
 }
 
+// One fixed zone, so the server (UTC) and the browser render the same day and text (no hydration mismatch).
+// Formatters are built once: toLocaleDateString with options builds a new one per call (~0.3 ms × 500 cards).
+export const TIME_ZONE = "Europe/Tallinn";
+const cardDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: TIME_ZONE });
+
 function formatDate(date: Date | null): string {
   if (!date) return "No date";
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "Europe/Tallinn", // same text on server and browser (see feed.tsx)
-  });
+  return cardDate.format(new Date(date));
 }
 
 /**

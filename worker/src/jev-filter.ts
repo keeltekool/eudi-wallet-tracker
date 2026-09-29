@@ -6,7 +6,7 @@
  * 2026-09-29): on the last 300 judged articles it dropped 43 of 73 off-topic articles and kept 34 of 35 that made
  * the brief.
  */
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { articles, sources } from "../../src/db/schema";
 import type { JevRunCounts } from "../../src/db/schema";
 import type { Database } from "../../src/db/index";
@@ -66,7 +66,8 @@ export async function jevScore(apiKey: string, a: FilterArticle): Promise<number
 /** Marks every pending article relevant or irrelevant. Never throws: a failure leaves articles pending. */
 export async function filterPending(db: Database, apiKey?: string): Promise<Omit<JevRunCounts, "duplicates">> {
   const queue = await db
-    .select({ id: articles.id, title: articles.title, fullText: articles.fullText, source: sources.name })
+    // Only the 300-char excerpt goes to Jev (see jevScore); RSS bodies can be whole HTML articles
+    .select({ id: articles.id, title: articles.title, fullText: sql<string | null>`left(${articles.fullText}, 300)`, source: sources.name })
     .from(articles)
     .leftJoin(sources, eq(sources.id, articles.sourceId))
     .where(eq(articles.status, "pending"))
@@ -98,13 +99,12 @@ export async function filterPending(db: Database, apiKey?: string): Promise<Omit
       else irrelevant++;
     }
   }
-  // allSettled: a DB error in one worker must not return before the others finish (their counts would be lost)
-  const results = await Promise.allSettled(
-    Array.from({ length: CONCURRENCY }, () => worker().catch((err) => { jevDown = true; throw err; }))
-  );
-  for (const r of results) {
-    if (r.status === "rejected") console.error(`[jev] filter stopped: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
-  }
+  // A DB error stops sorting but not the other workers mid-article, so the counts stay exact
+  const stop = (err: unknown) => {
+    jevDown = true;
+    console.error(`[jev] filter stopped: ${err instanceof Error ? err.message : String(err)}`);
+  };
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker().catch(stop)));
 
   const leftPending = total - relevant - irrelevant;
   if (leftPending > 0) console.log(`::warning::Jev filter failed; ${leftPending} of ${total} articles left pending for the routine`);

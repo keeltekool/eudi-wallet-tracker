@@ -116,9 +116,8 @@ export async function sendEmail(
   }
 }
 
-export async function sendLatestUpdateToEmail(
-  email: string
-): Promise<{ success: boolean; error?: string }> {
+/** The latest update log, rendered for email, or null before the first update. */
+async function latestUpdate() {
   const [latest] = await db
     .select()
     .from(livingDoc)
@@ -126,10 +125,7 @@ export async function sendLatestUpdateToEmail(
     .orderBy(desc(livingDoc.runDate))
     .limit(1);
 
-  if (!latest) {
-    return { success: false, error: "No update available yet" };
-  }
-
+  if (!latest) return null;
   const bodyHtml = markdownToHtml(latest.content);
   const updateDate = latest.runDate
     ? new Date(latest.runDate).toLocaleDateString("en-GB", {
@@ -138,8 +134,18 @@ export async function sendLatestUpdateToEmail(
         year: "numeric",
       })
     : "Recent";
+  return { latest, bodyHtml, updateDate };
+}
 
-  const html = buildNewsletterHtml(bodyHtml, updateDate, email);
+export async function sendLatestUpdateToEmail(
+  email: string
+): Promise<{ success: boolean; error?: string }> {
+  const update = await latestUpdate();
+  if (!update) {
+    return { success: false, error: "No update available yet" };
+  }
+
+  const html = buildNewsletterHtml(update.bodyHtml, update.updateDate, email);
 
   return sendEmail(
     email,
@@ -150,16 +156,11 @@ export async function sendLatestUpdateToEmail(
 
 /** Sends the latest update log to every active subscriber. Used by /api/newsletter/send and the Loop API. */
 export async function sendLatestUpdate() {
-  const [latest] = await db
-    .select()
-    .from(livingDoc)
-    .where(eq(livingDoc.section, "update"))
-    .orderBy(desc(livingDoc.runDate))
-    .limit(1);
-
-  if (!latest) {
+  const update = await latestUpdate();
+  if (!update) {
     return { sent: 0, reason: "No update log found" };
   }
+  const { latest, bodyHtml, updateDate } = update;
 
   const subscribers = await db
     .select()
@@ -169,15 +170,6 @@ export async function sendLatestUpdate() {
   if (subscribers.length === 0) {
     return { sent: 0, reason: "No active subscribers" };
   }
-
-  const bodyHtml = markdownToHtml(latest.content);
-  const updateDate = latest.runDate
-    ? new Date(latest.runDate).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "Recent";
 
   let sent = 0;
   const errors: string[] = [];
