@@ -72,6 +72,7 @@ export const articles = pgTable(
       .default([]),
     status: articleStatusEnum("status").notNull().default("pending"),
     rejectionReason: text("rejection_reason"),
+    jevScore: real("jev_score"), // Jev relevance filter score (worker/src/jev-filter.ts); null = judged by the routine
   },
   (table) => [uniqueIndex("articles_url_hash_idx").on(table.urlHash)]
 );

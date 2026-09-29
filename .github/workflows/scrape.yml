@@ -26,4 +26,5 @@ jobs:
       - name: Run scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }} # Jev relevance filter; delete the secret to roll back
         run: cd worker && npx tsx src/run-scrape.ts
