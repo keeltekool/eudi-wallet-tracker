@@ -49,14 +49,14 @@
 - Owner sees: signing, sealing and Business Wallet articles in Filtered and Curated after the run.
 
 ## Phase 2 — Jev sorts articles at scrape time
-- [ ] **Task 2.1 — DB columns**
+- [x] **Task 2.1 — DB columns**
   - `src/db/schema.ts`: `articles.jevScore real`, `articles.curatedAt timestamptz`, `scrapeRuns.jev jsonb $type<JevRunCounts>()`, where `type JevRunCounts = { relevant: number; irrelevant: number; duplicates: number; leftPending: number }`.
   - Plus a one-off `ALTER TABLE` against Neon.
-- [ ] **Task 2.2 — Duplicate marking**
+- [x] **Task 2.2 — Duplicate marking**
   - Files: new `src/lib/title-key.ts` (`titleKey(title: string): string`) and `worker/src/store.ts`.
   - `deduplicateAndStore` returns `{ inserted, duplicates, invalid, sameStory }`; a same-story article is inserted as `rejected`, `Duplicate of #<id>`.
   - Proof: an assert check that the Biometric Update headline and its Google News copy give the same key.
-- [ ] **Task 2.3 — Jev filter**
+- [x] **Task 2.3 — Jev filter**
   - Files: `worker/src/jev-filter.ts` (drafted 2026-09-29), `worker/src/orchestrator.ts`, `worker/src/run-scrape.ts`, `.github/workflows/scrape.yml` (secret into env), `worker/src/check-jev-filter.ts`.
   - Interfaces:
     - `jevScore(apiKey: string, a: { title: string; source: string | null; fullText: string | null }): Promise<number | null>`
@@ -72,17 +72,17 @@
 - A local dry run with a bad key leaves everything pending and prints the warning.
 
 ## Phase 3 — Every accepted article reaches the update and the Brief
-- [ ] **Task 3.1 — Curation time**
+- [x] **Task 3.1 — Curation time**
   - `app/api/loop/route.ts`: `curation-decisions` sets `curatedAt`; `op=living-doc` filters on `coalesce(curated_at, scraped_at) > since`.
-- [ ] **Task 3.2 — `brief-patch`**
+- [x] **Task 3.2 — `brief-patch`**
   - `app/api/loop/route.ts`: POST `{op:"brief-patch", heading, content}` → `{patched:true, heading}` or 400 `{error}`.
   - `loop/pipeline.md` Stage 2 applies NEW_FACT, UPDATED_FACT and RESOLVED_QUESTION changes through it.
-- [ ] **Task 3.3 — Newsletter (D8, owner answer 2026-09-29)**
+- [x] **Task 3.3 — Newsletter (D8, owner answer 2026-09-29)**
   - Neon: back up `newsletter_subscribers` to a local file outside the repo, then delete every row except `egertv@gmail.com`.
   - `src/lib/newsletter.ts`: move the send logic out of `app/api/newsletter/send/route.ts` into `sendLatestUpdate()`; the route keeps its `CRON_SECRET` auth and calls it.
   - `app/api/loop/route.ts`: `living-doc-update` calls `sendLatestUpdate()` after the insert and returns its `{sent, total, errors}`; a send failure doesn't fail the insert.
 
-**Gate 3:** real calls to the deployed app with the Loop token:
+**Gate 3 — PASSED 2026-09-29** (7/7; #51973 given its 23.09 acceptance time as `curated_at`, since the column didn't exist then):** real calls to the deployed app with the Loop token:
 - a missing heading → 400;
 - a truncated block → 400;
 - a same-content patch → 200, with `bible` unchanged and `bible-prev` saved;
@@ -90,14 +90,14 @@
 - Neon `newsletter_subscribers` holds only `egertv@gmail.com`.
 
 ## Phase 4 — Admin and header
-- [ ] **Task 4.1** — `app/admin/runs/_components/eudi-runs-view.tsx`: Jev columns (relevant, irrelevant, duplicates, left pending), "—" on older runs.
-- [ ] **Task 4.2** — `app/components/header.tsx`: no sideways scroll at 375 px on `/`, `/filtered`, `/curated`, `/strategy`, `/newsletter` (CSS only).
-- [ ] **Task 4.3** — `scripts/check-ui-flows.mjs` steps:
+- [x] **Task 4.1** — `app/admin/runs/_components/eudi-runs-view.tsx`: Jev columns (relevant, irrelevant, duplicates, left pending), "—" on older runs.
+- [x] **Task 4.2** — `app/components/header.tsx`: no sideways scroll at 375 px on `/`, `/filtered`, `/curated`, `/strategy`, `/newsletter` (CSS only).
+- [x] **Task 4.3** — `scripts/check-ui-flows.mjs` steps:
   - /admin/runs shows the Jev numbers of the Gate 2 run;
   - `scrollWidth <= 375` on every public tab;
   - Filtered lists an article the Gate 2 run sorted.
 
-- [ ] **Task 4.4 — Hydration fix (found by 4.3, 2026-09-29)** — `app/components/feed.tsx` and `article-card.tsx` group and format dates in the runtime's time zone (server UTC, browser Tallinn), so /filtered and /curated throw React #418 for Tallinn visitors. Pin `timeZone: "Europe/Tallinn"`. Proof: the 4.3 page-error check passes at 375 and 1440 (it failed on prod before).
+- [x] **Task 4.4 — Hydration fix (found by 4.3, 2026-09-29)** — `app/components/feed.tsx` and `article-card.tsx` group and format dates in the runtime's time zone (server UTC, browser Tallinn), so /filtered and /curated throw React #418 for Tallinn visitors. Pin `timeZone: "Europe/Tallinn"`. Proof: the 4.3 page-error check passes at 375 and 1440 (it failed on prod before).
 
 **Gate 4:** `check-ui-flows.mjs <prod>` all PASS at 375 and 1440, and `ship.mjs / /filtered /curated /strategy /newsletter` PASS.
 
